@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Planificació de processos selectius</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F6F4EF;
+    --paper-raised:#FFFFFF;
+    --ink:#241F1A;
+    --ink-soft:#6B6459;
+    --line:#E3DCCF;
+    --line-strong:#C6BCA5;
+    --line-week:#EEE8DA;
+    --today:#A8321E;
+
+    --t-decret:#A8321E;
+    --t-publicacio:#2E6E63;
+    --t-llista:#7A3B54;
+    --t-notificacio:#33526E;
+    --t-convocatoria:#C0522F;
+    --t-termini:#B0791E;
+    --t-tribunal:#4A4535;
+    --t-resultat:#1F6F4A;
+    --t-altres:#8A8374;
+
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  :root:not([data-theme="light"]) {
+    @media (prefers-color-scheme: dark) {
+      --paper:#1C1A16; --paper-raised:#242119; --ink:#EFE9DD; --ink-soft:#A79E8C;
+      --line:#332F26; --line-strong:#4E4939; --line-week:#292520;
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#1C1A16; --paper-raised:#242119; --ink:#EFE9DD; --ink-soft:#A79E8C;
+    --line:#332F26; --line-strong:#4E4939; --line-week:#292520;
+  }
+
+  * { box-sizing:border-box; }
+  html,body{ height:100%; }
+  body{
+    margin:0; background:var(--paper); color:var(--ink);
+    font-family:"IBM Plex Sans", -apple-system, sans-serif; -webkit-font-smoothing:antialiased;
+  }
+  .wrap{ max-width:1500px; margin:0 auto; padding:28px 20px 60px; }
+
+  header.top{
+    display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:16px;
+    border-bottom:2px solid var(--ink); padding-bottom:16px; margin-bottom:6px;
+  }
+  h1{ font-family:"Source Serif 4", serif; font-weight:600; font-size:clamp(22px,3.4vw,32px); margin:0; letter-spacing:-0.01em; }
+  .subtitle{ color:var(--ink-soft); font-size:14px; margin-top:4px; max-width:64ch; line-height:1.45; }
+  .meta{ text-align:right; font-size:12.5px; color:var(--ink-soft); line-height:1.6; }
+  .meta b{ color:var(--ink); font-weight:600; }
+
+  .controls{
+    display:flex; flex-wrap:wrap; gap:10px 22px; align-items:center;
+    padding:14px 0 18px; border-bottom:1px solid var(--line); margin-bottom:18px;
+  }
+  .control-group{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .control-label{ font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-soft); margin-right:2px; }
+
+  .chip{
+    border:1px solid var(--line-strong); background:var(--paper-raised); color:var(--ink);
+    padding:5px 11px; border-radius:999px; font-size:12.5px; cursor:pointer;
+    display:flex; align-items:center; gap:7px; transition:transform .12s ease, opacity .15s ease;
+    user-select:none;
+  }
+  .chip:hover{ transform:translateY(-1px); }
+  .chip.off{ opacity:.32; }
+  .chip .shape{ width:10px; height:10px; flex:none; }
+
+  .search{
+    border:1px solid var(--line-strong); background:var(--paper-raised); color:var(--ink);
+    padding:6px 12px; border-radius:8px; font-size:13px; font-family:inherit; width:200px;
+  }
+  .search:focus{ outline:2px solid var(--today); outline-offset:1px; }
+
+  .toggle-btn{
+    border:1px solid var(--line-strong); background:var(--paper-raised); color:var(--ink);
+    padding:6px 12px; border-radius:8px; font-size:12.5px; cursor:pointer; font-family:inherit;
+  }
+  .toggle-btn:hover{ background:var(--line); }
+
+  .gantt-shell{ border:1px solid var(--line-strong); background:var(--paper-raised); border-radius:10px; overflow:hidden; }
+  .gantt-scroll{ overflow-x:auto; overflow-y:hidden; -webkit-overflow-scrolling:touch; }
+  .gantt-scroll::-webkit-scrollbar{ height:10px; }
+  .gantt-scroll::-webkit-scrollbar-thumb{ background:var(--line-strong); border-radius:6px; }
+
+  .gantt-grid{ display:grid; grid-template-columns: 230px 1fr; }
+
+  .side-col{ position:sticky; left:0; z-index:5; background:var(--paper-raised); border-right:1px solid var(--line-strong); }
+  .side-head{ height:54px; display:flex; align-items:flex-end; padding:0 14px 8px; font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-soft); border-bottom:1px solid var(--line-strong); background:var(--paper-raised); }
+  .side-row{ display:flex; flex-direction:column; justify-content:center; gap:2px; padding:8px 14px; border-bottom:1px solid var(--line); min-height:66px; }
+  .side-row .muni{ font-weight:600; font-size:13.5px; line-height:1.25; }
+  .side-row .cat{ font-size:11px; color:var(--ink-soft); }
+  .side-row .yr{ font-family:"IBM Plex Mono", monospace; font-size:10.5px; color:var(--ink-soft); }
+
+  .time-col{ position:relative; }
+  .time-header{ height:54px; position:relative; border-bottom:1px solid var(--line-strong); }
+  .month-band{ position:absolute; top:0; height:24px; border-bottom:1px solid var(--line-strong); display:flex; align-items:center; overflow:hidden; }
+  .month-band-label{ font-family:"Source Serif 4", serif; font-size:13px; font-weight:600; padding-left:8px; white-space:nowrap; color:var(--ink); overflow:hidden; text-overflow:ellipsis; }
+
+  /* week ticks: thin dashed rule, deliberately lighter/finer than month rules so the two never read as the same kind of line */
+  .week-tick{
+    position:absolute; top:24px; bottom:0; width:1px;
+    background-image:repeating-linear-gradient(to bottom, var(--line-week) 0 3px, transparent 3px 7px);
+  }
+  .week-tick.month-start{ background-image:none; background-color:var(--line-strong); }
+  .week-label{ position:absolute; top:29px; font-size:9.5px; color:var(--ink-soft); font-family:"IBM Plex Mono", monospace; padding-left:3px; white-space:nowrap; }
+
+  .holiday-band{ position:absolute; top:0; bottom:0; background:rgba(168,50,30,.11); }
+  .holiday-band.august{
+    background-image:repeating-linear-gradient(45deg, rgba(168,50,30,.10) 0 5px, rgba(168,50,30,.04) 5px 10px);
+  }
+  .header-holiday{ position:absolute; top:24px; bottom:0; background:rgba(168,50,30,.14); }
+  .header-holiday.august{
+    background-image:repeating-linear-gradient(45deg, rgba(168,50,30,.13) 0 5px, rgba(168,50,30,.05) 5px 10px);
+  }
+  .rows-area{ position:relative; }
+  /* full-height week rule behind the rows: dashed + pale, clearly distinct from the solid month rule */
+  .row-bg-week{
+    position:absolute; top:0; bottom:0; width:1px;
+    background-image:repeating-linear-gradient(to bottom, var(--line-week) 0 3px, transparent 3px 7px);
+  }
+  .row-bg-month{ position:absolute; top:0; bottom:0; width:1px; background-color:var(--line-strong); }
+
+  .gantt-row{ position:relative; border-bottom:1px solid var(--line); }
+
+  .connector{ position:absolute; top:50%; height:2px; background:var(--line-strong); border-radius:1px; }
+  .connector.gap{ background:transparent; border-top:1px dashed var(--line-strong); height:0; }
+
+  .marker{
+    position:absolute; top:50%; transform:translate(-50%,-50%);
+    width:11px; height:11px; cursor:pointer;
+    box-shadow:0 0 0 2px var(--paper-raised);
+    transition:transform .1s ease;
+  }
+  .marker:hover{ transform:translate(-50%,-50%) scale(1.6) !important; z-index:20; }
+
+  .today-line{ position:absolute; top:0; bottom:0; width:1px; background:var(--today); z-index:3; }
+  .today-label{ position:absolute; top:-2px; font-size:10px; color:var(--today); font-weight:600; background:var(--paper-raised); padding:1px 4px; border-radius:3px; white-space:nowrap; font-family:"IBM Plex Mono", monospace; }
+
+  .phase-tag{
+    position:absolute; top:6px; font-size:9.5px; color:var(--ink-soft); text-transform:uppercase; letter-spacing:.04em;
+    background:var(--paper-raised); padding:1px 5px; border-radius:3px; border:1px solid var(--line);
+    z-index:2; box-shadow:0 1px 3px rgba(0,0,0,.06);
+  }
+
+  .tooltip{
+    position:fixed; z-index:100; pointer-events:none; background:var(--ink); color:var(--paper);
+    padding:9px 12px; border-radius:8px; font-size:12.5px; line-height:1.5; max-width:280px;
+    box-shadow:0 8px 24px rgba(0,0,0,.25); opacity:0; transition:opacity .1s ease;
+  }
+  .tooltip.show{ opacity:1; }
+  .tooltip .t-tramit{ font-size:11px; text-transform:uppercase; letter-spacing:.05em; opacity:.75; margin-bottom:2px; }
+  .tooltip .t-fase{ font-weight:600; margin-bottom:2px; }
+  .tooltip .t-date{ font-family:"IBM Plex Mono", monospace; opacity:.85; }
+  .tooltip .t-note{ margin-top:4px; font-style:italic; opacity:.8; }
+
+  footer.note{ margin-top:22px; font-size:12px; color:var(--ink-soft); line-height:1.6; max-width:80ch; }
+
+  /* shapes */
+  .shape-circle{ border-radius:50%; }
+  .shape-square{ border-radius:2px; }
+  .shape-diamond{ border-radius:2px; transform:translate(-50%,-50%) rotate(45deg); }
+  .marker.shape-diamond:hover{ transform:translate(-50%,-50%) rotate(45deg) scale(1.6) !important; }
+  .chip .shape-diamond{ transform:rotate(45deg); border-radius:2px; }
+  .shape-triangle-up{ clip-path:polygon(50% 0%, 0% 100%, 100% 100%); }
+  .shape-triangle-down{ clip-path:polygon(50% 100%, 0% 0%, 100% 0%); }
+  .shape-hex{ clip-path:polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%); }
+  .shape-plus{ clip-path:polygon(35% 0%,65% 0%,65% 35%,100% 35%,100% 65%,65% 65%,65% 100%,35% 100%,35% 65%,0% 65%,0% 35%,35% 35%); }
+  .shape-star{ clip-path:polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%); }
+
+  @media (max-width: 720px){
+    .side-col{ width:150px; }
+    .gantt-grid{ grid-template-columns: 150px 1fr; }
+    .side-row .muni{ font-size:12px; }
+    .meta{ text-align:left; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div>
+      <h1>Planificació de processos selectius</h1>
+      <div class="subtitle">Una línia per procés. Cada marcador és una fita real, amb forma i color segons el tipus de tràmit — no segons el tipus de plaça. Escala en setmanes.</div>
+    </div>
+    <div class="meta">
+      <div><b id="metaCount">6</b> processos carregats</div>
+      <div id="metaRange"></div>
+    </div>
+  </header>
+
+  <div class="controls">
+    <div class="control-group">
+      <span class="control-label">Tipus de tràmit</span>
+      <div id="tramitChips" style="display:flex; gap:8px; flex-wrap:wrap;"></div>
+    </div>
+    <div class="control-group">
+      <span class="control-label">Cerca</span>
+      <input class="search" id="searchBox" type="text" placeholder="municipi o categoria…">
+    </div>
+    <div class="control-group">
+      <button class="toggle-btn" id="zoomOut">− zoom</button>
+      <button class="toggle-btn" id="zoomIn">+ zoom</button>
+      <button class="toggle-btn" id="todayBtn">avui</button>
+    </div>
+  </div>
+
+  <div class="gantt-shell">
+    <div class="gantt-scroll" id="ganttScroll">
+      <div class="gantt-grid" id="ganttGrid">
+        <div class="side-col" id="sideCol">
+          <div class="side-head">Procés</div>
+        </div>
+        <div class="time-col" id="timeCol">
+          <div class="time-header" id="timeHeader"></div>
+          <div class="rows-area" id="rowsArea"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="legend-note" style="display:flex; gap:18px; flex-wrap:wrap; align-items:center; padding:14px 4px 0; font-size:12px; color:var(--ink-soft);">
+    <div style="display:flex; align-items:center; gap:6px;"><span style="width:20px; height:12px; border-radius:2px; background:rgba(168,50,30,.20); display:inline-block;"></span> festiu oficial (Catalunya)</div>
+    <div style="display:flex; align-items:center; gap:6px;"><span style="width:20px; height:12px; border-radius:2px; display:inline-block; background-image:repeating-linear-gradient(45deg, rgba(168,50,30,.28) 0 5px, rgba(168,50,30,.10) 5px 10px);"></span> agost (mes inhàbil)</div>
+  </div>
+
+  <footer class="note">
+    Dades importades de <b>Programació_processos_OPO_2025.xlsx</b> (pestanyes 2025 i 2026). La línia fina uneix les fites d'una mateixa fase (Delegació / Procés selectiu) en ordre cronològic; el trencament marca el pas d'una fase a l'altra. El sombrejat vermellós marca els dies festius oficials de Catalunya i el mes d'agost sencer, tractat com a període inhàbil a efectes de còmput de terminis.
+  </footer>
+
+</div>
+
+<div class="tooltip" id="tooltip"></div>
+
+<script>
+const DATA = [{"id": 1, "any": "2025", "categoria": "Administratiu/iva", "municipi": "OLOST", "subfases": [{"nom": "Delegació", "inici": "2025-05-05", "fi": "2025-08-04", "fites": [{"fase": "DECRET INICI ACTUACIONS TEDIBA", "start": "2025-05-05", "end": "2025-05-05", "dies": null, "nota": null, "tramit": "Decret"}, {"fase": "SIGNATURA DECRET", "start": "2025-05-14", "end": "2025-05-14", "dies": 7, "nota": null, "tramit": "Decret"}, {"fase": "PUBLICAR BOP I DOGC", "start": "2025-05-23", "end": "2025-05-23", "dies": 7, "nota": null, "tramit": "Publicació"}, {"fase": "NOTIFICACIÓ AJUNTAMENTS", "start": "2025-05-23", "end": "2025-05-23", "dies": null, "nota": null, "tramit": "Notificació / Acord"}, {"fase": "ACORD PLE AJUNTAMENT", "start": "2025-05-31", "end": "2025-06-30", "dies": null, "nota": null, "tramit": "Notificació / Acord"}, {"fase": "ACORD PLE DIBA ACCEPTACIÓ DELEGACIONS", "start": "2025-07-24", "end": "2025-07-24", "dies": null, "nota": null, "tramit": "Notificació / Acord"}, {"fase": "NOTIFICACIÓ AJUNTAMENTS", "start": "2025-07-24", "end": "2025-07-24", "dies": null, "nota": null, "tramit": "Notificació / Acord"}, {"fase": "PUBLICAR BOP I DOGC", "start": "2025-08-04", "end": "2025-08-04", "dies": 7, "nota": null, "tramit": "Publicació"}]}, {"nom": "Procés selectiu", "inici": "2025-09-01", "fi": "2025-11-21", "fites": [{"fase": "1.BASES I CONVOCATÒRIA TEDIBA", "start": "2025-09-01", "end": "2025-09-01", "dies": null, "nota": null, "tramit": "Convocatòria / Prova"}, {"fase": "2.SIGNATURA DECRET", "start": "2025-09-08", "end": "2025-09-08", "dies": 5, "nota": null, "tramit": "Decret"}, {"fase": "3.PUBLICACIÓ BOPB", "start": "2025-09-12", "end": "2025-09-12", "dies": 4, "nota": null, "tramit": "Publicació"}, {"fase": "4.PUBLICACIÓ DOGC i BOE", "start": "2025-09-16", "end": "2025-09-16", "dies": 2, "nota": null, "tramit": "Publicació"}, {"fase": "5.INICI TERMINI PRESENTACIÓ INSTÀNCIES", "start": "2025-09-17", "end": "2025-09-17", "dies": 1, "nota": null, "tramit": "Termini"}, {"fase": "6.FI TERMINI PRESENTACIÓ INSTÀNCIES", "start": "2025-10-15", "end": "2025-10-15", "dies": 20, "nota": null, "tramit": "Termini"}, {"fase": "7.LLISTA PROVISIONAL A TEDIBA", "start": "2025-10-16", "end": "2025-10-16", "dies": 1, "nota": null, "tramit": "Llista"}, {"fase": "8.SIGNATURA DECRET", "start": "2025-10-22", "end": "2025-10-22", "dies": 4, "nota": null, "tramit": "Decret"}, {"fase": "9.CONSTITUCIÓ TRIBUNAL", "start": "2025-09-16", "end": "2025-09-16", "dies": 2, "nota": null, "tramit": "Tribunal"}, {"fase": "10.PUBLICACIÓ LLISTA PROV BOP i DOGC", "start": "2025-10-24", "end": "2025-10-24", "dies": 2, "nota": null, "tramit": "Llista"}, {"fase": "11. INICI TERMINI AL.LEGACIONS", "start": "2025-10-27", "end": "2025-10-27", "dies": 1, "nota": null, "tramit": "Termini"}, {"fase": "12.FI TERMINI AL.LEGACIONS", "start": "2025-11-10", "end": "2025-11-10", "dies": 10, "nota": null, "tramit": "Termini"}, {"fase": "13.LLISTA DEFINITIVA A TEDIBA", "start": null, "end": null, "dies": 1, "nota": null, "tramit": "Llista"}, {"fase": "14.SIGNATURA DECRET", "start": null, "end": null, "dies": 5, "nota": null, "tramit": "Decret"}, {"fase": "15.PUBLICACIÓ LLISTA DEF BOP i DOGC", "start": null, "end": null, "dies": 2, "nota": null, "tramit": "Llista"}, {"fase": "16.ANUNCI CONVOCATÒRIA PROVA LLENGÜES", "start": null, "end": null, "dies": 1, "nota": null, "tramit": "Convocatòria / Prova"}, {"fase": "17.PROVA LLENGÜES", "start": null, "end": null, "dies": null, "nota": null, "tramit": "Convocatòria / Prova"}, {"fase": "18.PUBLICACIÓ RESULTATS CATALÀ", "start": null, "end": null, "dies": 1, "nota": null, "tramit": "Resultat / Nomenament"}, {"fase": "19.APROVACIÓ PROVES TRIBUNAL", "start": "2025-10-28", "end": "2025-10-28", "dies": 30, "nota": null, "tramit": "Tribunal"}, {"fase": "20.ANUNCI CONVOCATÒRIA PROVES OPOSICIÓ", "start": "2025-11-11", "end": "2025-11-11", "dies": 1, "nota": null, "tramit": "Convocatòria / Prova"}, {"fase": "21.PROVES OPOSICIÓ", "start": "2025-11-14", "end": "2025-11-14", "dies": 3, "nota": null, "tramit": "Convocatòria / Prova"}, {"fase": "22.ANUNCI TRIBUNAL PREGUNTES  I PLANTILLA CORRECCIÓ", "start": "2025-11-17", "end": "2025-11-17", "dies": 1, "nota": null, "tramit": "Tribunal"}, {"fase": "23.CORRECCIÓ PROVA I REUNIÓ TRIBUNAL APROVACIÓ RESULTATS I PROPOSTA NOMENAMENT", "start": "2025-11-20", "end": "2025-11-20", "dies": 3, "nota": null, "tramit": "Tribunal"}, {"fase": "24.ANUNCI TRIBUNAL RESULTATS PROVA I PROPOSTA NOMENAMENT", "start": "2025-11-21", "end": "2025-11-21", "dies": 1, "nota": null, "tramit": "Resultat / Nomenament"}]}]}, {"id": 2, "any": "2025", "categoria": "Administratiu/iva", "municipi": "CARDONA", "subfases": [{"nom": "Delegació", "inici": "2025-05-05", "fi": "2025-08-04", "fites": [{"fase": "DECRET INICI ACTUACIONS TEDIBA", "start": "2025-05-05", "end": "2025-05-05", "dies": null, "nota": null, "tramit": "Decret"}, {"fase": "SIGNATURA DECRET", "start": "2025-05-14", "end": "2025-05-14", "dies": 7, "nota": null, "tramit": "Decret"}, {"fase": "PUBLICAR BOP I DOGC", "start": "2025-05-23", "end": "2025-05-23", "dies": 7, "nota": null, "tramit": "Publicació"}, {"fase": "NOTIFICACIÓ AJUNTAMENTS", "start": "2025-05-23", "end": "2025-05-23", "dies": null, "nota": null, "tramit": "Notificació / Acord"}, {"fase": "ACORD PLE AJUNTAMENT", "start": "2025-05-31", "end": "2025-06-30", "dies": null, "nota": null, "tramit": "Notificació / Acord"}, {"fase": "ACORD PLE DIBA ACCEPTACIÓ DELEGACIONS", "start": "2025-07-24", "end": "2025-07-24", "dies": null, "nota": null, "tramit": "Notificació / Acord"}, {"fase": "NOTIFICACIÓ AJUNTAMENTS", "start": "2025-07-24", "end": "2025-07-24", "dies": null, "nota": null, "tramit": "Notificació / Acord"}, {"fase": "PUBLICAR BOP I DOGC", "start": "2025-08-04", "end": "2025-08-04", "dies": 7, "nota": null, "tramit": "Publicació"}]}, {"nom": "Procés selectiu", "inici": "2025-09-01", "fi": "2025-12-10", "fites": [{"fase": "1.BASES I CONVOCATÒRIA TEDIBA", "start": "2025-09-01", "end": "2025-09-01", "dies": null, "nota": null, "tramit": "Convocatòria / Prova"}, {"fase": "2.SIGNATURA DECRET", "start": "2025-09-08", "end": "2025-09-08", "dies": 5, "nota": null, "tramit": "Decret"}, {"fase": "3.PUBLICACIÓ BOPB", "start": "2025-09-12", "end": "2025-09-12", "dies": 4, "nota": null, "tramit": "Publicació"}, {"fase": "4.PUBLICACIÓ DOGC i BOE", "start": "2025-09-16", "end": "2025-09-16", "dies": 2, "nota": null, "tramit": "Publicació"}, {"fase": "5.INICI TERMINI PRESENTACIÓ INSTÀNCIES", "start": "2025-09-17", "end": "2025-09-17", "dies": 1, "nota": null, "tramit": "Termini"}, {"fase": "6.FI TERMINI PRESENTACIÓ INSTÀNCIES", "start": "2025-10-15", "end": "2025-10-15", "dies": 20, "nota": null, "tramit": "Termini"}, {"fase": "7.LLISTA PROVISIONAL A TEDIBA", "start": "2025-10-16", "end": "2025-10-16", "dies": 1, "nota": null, "tramit": "Llista"}, {"fase": "8.SIGNATURA DECRET", "start": "2025-10-22", "end": "2025-10-22", "dies": 4, "nota": null, "tramit": "Decret"}, {"fase": "9.CONSTITUCIÓ TRIBUNAL", "start": "2025-09-16", "end": "2025-09-16", "dies": 2, "nota": null, "tramit": "Tribunal"}, {"fase": "10.PUBLICACIÓ LLISTA PROV BOP i DOGC", "start": "2025-10-24", "end": "2025-10-24", "dies": 2, "nota": null, "tramit": "Llista"}, {"fase": "11. INICI TERMINI AL.LEGACIONS", "start": "2025-10-27", "end": "2025-10-27", "dies": 1, "nota": null, "tramit": "Termini"}, {"fase": "12.FI TERMINI AL.LEGACIONS", "start": "2025-11-10", "end": "2025-11-10", "dies": 10, "nota": null, "tramit": "Termini"}, {"fase": "13.LLISTA DEFINITIVA A TEDIBA", "start": "2025-11-11", "end": "2025-11-11", "dies": 1, "nota": null, "tramit": "Llista"}, {"fase": "14.SIGNATURA DECRET", "start": "2025-11-18", "end": "2025-11-18", "dies": 5, "nota": null, "tramit": "Decret"}, {"fase": "15.PUBLICACIÓ LLISTA DEF BOP i DOGC", "start": "2025-11-20", "end": "2025-11-20", "dies": 2, "nota": null, "tramit": "Llista"}, {"fase": "16.ANUNCI CONVOCATÒRIA PROVA LLENGÜES", "start": "2025-11-21", "end": "2025-11-21", "dies": 1, "nota": null, "tramit": "Convocatòria / Prova"}, {"fase": "17.PROVA LLENGÜES", "start": "2025-11-26", "end": "2025-11-26", "dies": 3, "nota": null, "tramit": "Convocatòria / Prova"}, {"fase": "18.PUBLICACIÓ RESULTATS CATALÀ", "start": "2025-11-27", "end": "2025-11-27", "dies": 1, "nota": null, "tramit": "Resultat / Nomenament"}, {"fase": "19.APROVACIÓ PROVES TRIBUNAL", "start": "2025-10-28", "end": "2025-10-28", "dies": 30, "nota": null, "tramit": "Tribunal"}, {"fase": "20.ANUNCI CONVOCATÒRIA PROVES OPOSICIÓ", "start": "2025-11-27", "end": "2025-11-27", "dies": 0, "nota": null, "tramit": "Convocatòria / Prova"}, {"fase": "21.PROVES OPOSICIÓ", "start": "2025-12-02", "end": "2025-12-02", "dies": 3, "nota": null, "tramit": "Convocatòria / Prova"}, {"fase": "22.ANUNCI TRIBUNAL PREGUNTES  I PLANTILLA CORRECCIÓ", "start": "2025-12-03", "end": "2025-12-03", "dies": 1, "nota": null, "tramit": "Tribunal"}, {"fase": "23.CORRECCIÓ PROVA I REUNIÓ TRIBUNAL APROVACIÓ RESULTATS I PROPOSTA NOMENAMENT", "start": "2025-12-09", "end": "2025-12-09", "dies": 4, "nota": null, "tramit": "Tribunal"}, {"fase": "24.ANUNCI TRIBUNAL RESULTATS PROVA I PROPOSTA NOMENAMENT", "start": "2025-12-10", "end": "2025-12-10", "dies": 1, "nota": null, "tramit": "Resultat / Nomenament"}]}]}, {"id": 3, "any": "2025", "categoria": "Administratiu/iva", "municipi": "ST JULIÀ VILATORTA", "subfases": [{"nom": "Delegació", "inici": "2025-05-05", "fi": "2025-08-04", "fites": [{"fase": "DECRET INICI ACTUACIONS TEDIBA", "start": "2025-05-05", "end": "2025-05-05", "dies": null, "nota": null, "tramit": "Decret"}, {"fase": "SIGNATURA DECRET", "start": "2025-05-14", "end": "2025-05-14", "dies": 7, "nota": null, "tramit": "Decret"}, {"fase": "PUBLICAR BOP I DOGC", "start": "2025-05-23", "end": "2025-05-23", "dies": 7, "nota": null, "tramit": "Publicació"}, {"fase": "NOTIFICACIÓ AJUNTAMENTS", "start": "2025-05-23", "end": "2025-05-23", "dies": null, "nota": null, "tramit": "Notificació / Acord"}, {"fase": "ACORD PLE AJUNTAMENT", "start": "2025-05-31", "end": "2025-06-30", "dies": null, "nota": null, "tramit": "Notificació / Acord"}, {"fase": "ACORD PLE DIBA ACCEPTACIÓ DELEGACIONS", "start": "2025-07-24", "end": "2025-07-24", "dies": null, "nota": null, "tramit": "Notificació / Acord"}, {"fase": "NOTIFICACIÓ AJUNTAMENTS", "start": "2025-07-24", "end": "2025-07-24", "dies": null, "nota": null, "tramit": "Notificació / Acord"}, {"fase": "PUBLICAR BOP I DOGC", "start": "2025-08-04", "end": "2025-08-04", "dies": 7, "nota": null, "tramit": "Publicació"}]}, {"nom": "Procés selectiu", "inici": "2025-09-01", "fi": "2025-12-11", "fites": [{"fase": "1.BASES I CONVOCATÒRIA TEDIBA", "start": "2025-09-01", "end": "2025-09-01", "dies": null, "nota": null, "tramit": "Convocatòria / Prova"}, {"fase": "2.SIGNATURA DECRET", "start": "2025-09-08", "end": "2025-09-08", "dies": 5, "nota": null, "tramit": "Decret"}, {"fase": "3.PUBLICACIÓ BOPB", "start": "2025-09-12", "end": "2025-09-12", "dies": 4, "nota": null, "tramit": "Publicació"}, {"fase": "4.PUBLICACIÓ DOGC i BOE", "start": "2025-09-16", "end": "2025-09-16", "dies": 2, "nota": null, "tramit": "Publicació"}, {"fase": "5.INICI TERMINI PRESENTACIÓ INSTÀNCIES", "start": "2025-09-17", "end": "2025-09-17", "dies": 1, "nota": null, "tramit": "Termini"}, {"fase": "6.FI TERMINI PRESENTACIÓ INSTÀNCIES", "start": "2025-10-15", "end": "2025-10-15", "dies": 20, "nota": null, "tramit": "Termini"}, {"fase": "7.LLISTA PROVISIONAL A TEDIBA", "start": "2025-10-16", "end": "2025-10-16", "dies": 1, "nota": null, "tramit": "Llista"}, {"fase": "8.SIGNATURA DECRET", "start": "2025-10-22", "end": "2025-10-22", "dies": 4, "nota": null, "tramit": "Decret"}, {"fase": "9.CONSTITUCIÓ TRIBUNAL", "start": "2025-09-16", "end": "2025-09-16", "dies": 2, "nota": null, "tramit": "Tribunal"}, {"fase": "10.PUBLICACIÓ LLISTA PROV BOP i DOGC", "start": "2025-10-24", "end": "2025-10-24", "dies": 2, "nota": null, "tramit": "Llista"}, {"fase": "11. INICI TERMINI AL.LEGACIONS", "start": "2025-10-27", "end": "2025-10-27", "dies": 1, "nota": null, "tramit": "Termini"}, {"fase": "12.FI TERMINI AL.LEGACIONS", "start": "2025-11-10", "end": "2025-11-10", "dies": 10, "nota": null, "tramit": "Termini"}, {"fase": "13.LLISTA DEFINITIVA A TEDIBA", "start": "2025-11-11", "end": "2025-11-11", "dies": 1, "nota": null, "tramit": "Llista"}, {"fase": "14.SIGNATURA DECRET", "start": "2025-11-18", "end": "2025-11-18", "dies": 5, "nota": null, "tramit": "Decret"}, {"fase": "15.PUBLICACIÓ LLISTA DEF BOP i DOGC", "start": "2025-11-20", "end": "2025-11-20", "dies": 2, "nota": null, "tramit": "Llista"}, {"fase": "16.ANUNCI CONVOCATÒRIA PROVA LLENGÜES", "start": "2025-11-21", "end": "2025-11-21", "dies": 1, "nota": null, "tramit": "Convocatòria / Prova"}, {"fase": "17.PROVA LLENGÜES", "start": "2025-11-27", "end": "2025-11-27", "dies": 4, "nota": null, "tramit": "Convocatòria / Prova"}, {"fase": "18.PUBLICACIÓ RESULTATS CATALÀ", "start": "2025-11-28", "end": "2025-11-28", "dies": 1, "nota": null, "tramit": "Resultat / Nomenament"}, {"fase": "19.APROVACIÓ PROVES TRIBUNAL", "start": "2025-10-28", "end": "2025-10-28", "dies": 30, "nota": null, "tramit": "Tribunal"}, {"fase": "20.ANUNCI CONVOCATÒRIA PROVES OPOSICIÓ", "start": "2025-11-28", "end": "2025-11-28", "dies": 0, "nota": null, "tramit": "Convocatòria / Prova"}, {"fase": "21.PROVES OPOSICIÓ", "start": "2025-12-03", "end": "2025-12-03", "dies": 3, "nota": null, "tramit": "Convocatòria / Prova"}, {"fase": "22.ANUNCI TRIBUNAL PREGUNTES  I PLANTILLA CORRECCIÓ", "start": "2025-12-04", "end": "2025-12-04", "dies": 1, "nota": null, "tramit": "Tribunal"}, {"fase": "23.CORRECCIÓ PROVA I REUNIÓ TRIBUNAL APROVACIÓ RESULTATS I PROPOSTA NOMENAMENT", "start": "2025-12-10", "end": "2025-12-10", "dies": 4, "nota": null, "tramit": "Tribunal"}, {"fase": "24.ANUNCI TRIBUNAL RESULTATS PROVA I PROPOSTA NOMENAMENT", "start": "2025-12-11", "end": "2025-12-11", "dies": 1, "nota": null, "tramit": "Resultat / Nomenament"}]}]}, {"id": 4, "any": "2026", "categoria": "TM Secretaria", "municipi": "BALSARENY", "subfases": [{"nom": "Delegació", "inici": "2025-05-05", "fi": "2025-08-04", "fites": [{"fase": "DECRET INICI ACTUACIONS TEDIBA", "start": "2025-05-05", "end": "2025-05-05", "dies": null, "nota": null, "tramit": "Decret"}, {"fase": "SIGNATURA DECRET", "start": "2025-05-14", "end": "2025-05-14", "dies": 7, "nota": null, "tramit": "Decret"}, {"fase": "PUBLICAR BOP I DOGC", "start": "2025-05-23", "end": "2025-05-23", "dies": 7, "nota": null, "tramit": "Publicació"}, {"fase": "NOTIFICACIÓ AJUNTAMENTS", "start": "2025-05-23", "end": "2025-05-23", "dies": null, "nota": null, "tramit": "Notificació / Acord"}, {"fase": "ACORD PLE AJUNTAMENT", "start": "2025-05-31", "end": "2025-06-30", "dies": null, "nota": null, "tramit": "Notificació / Acord"}, {"fase": "ACORD PLE DIBA ACCEPTACIÓ DELEGACIONS", "start": "2025-07-24", "end": "2025-07-24", "dies": null, "nota": null, "tramit": "Notificació / Acord"}, {"fase": "NOTIFICACIÓ AJUNTAMENTS", "start": "2025-07-24", "end": "2025-07-24", "dies": null, "nota": null, "tramit": "Notificació / Acord"}, {"fase": "PUBLICAR BOP I DOGC", "start": "2025-08-04", "end": "2025-08-04", "dies": 7, "nota": null, "tramit": "Publicació"}]}, {"nom": "Procés selectiu", "inici": "2026-01-07", "fi": "2026-04-27", "fites": [{"fase": "1.BASES I CONVOCATÒRIA TEDIBA", "start": "2026-01-07", "end": "2026-01-07", "dies": null, "nota": null, "tramit": "Convocatòria / Prova"}, {"fase": "2.SIGNATURA DECRET", "start": "2026-01-14", "end": "2026-01-14", "dies": 5, "nota": null, "tramit": "Decret"}, {"fase": "3.PUBLICACIÓ BOPB", "start": "2026-01-20", "end": "2026-01-20", "dies": 4, "nota": null, "tramit": "Publicació"}, {"fase": "4.PUBLICACIÓ DOGC i BOE", "start": "2026-01-22", "end": "2026-01-22", "dies": 2, "nota": null, "tramit": "Publicació"}, {"fase": "5.INICI TERMINI PRESENTACIÓ INSTÀNCIES", "start": "2026-01-23", "end": "2026-01-23", "dies": 1, "nota": null, "tramit": "Termini"}, {"fase": "6.FI TERMINI PRESENTACIÓ INSTÀNCIES", "start": "2026-02-20", "end": "2026-02-20", "dies": 20, "nota": null, "tramit": "Termini"}, {"fase": "7.LLISTA PROVISIONAL A TEDIBA", "start": "2026-02-23", "end": "2026-02-23", "dies": 1, "nota": null, "tramit": "Llista"}, {"fase": "8.SIGNATURA DECRET", "start": "2026-02-27", "end": "2026-02-27", "dies": 4, "nota": null, "tramit": "Decret"}, {"fase": "9.CONSTITUCIÓ TRIBUNAL", "start": "2026-01-22", "end": "2026-01-22", "dies": 2, "nota": null, "tramit": "Tribunal"}, {"fase": "10.PUBLICACIÓ LLISTA PROV BOP i DOGC", "start": "2026-03-03", "end": "2026-03-03", "dies": 2, "nota": null, "tramit": "Llista"}, {"fase": "11. INICI TERMINI AL.LEGACIONS", "start": "2026-03-04", "end": "2026-03-04", "dies": 1, "nota": null, "tramit": "Termini"}, {"fase": "12.FI TERMINI AL.LEGACIONS", "start": "2026-03-18", "end": "2026-03-18", "dies": 10, "nota": null, "tramit": "Termini"}, {"fase": "13.LLISTA DEFINITIVA A TEDIBA", "start": "2026-03-19", "end": "2026-03-19", "dies": 1, "nota": null, "tramit": "Llista"}, {"fase": "14.SIGNATURA DECRET", "start": "2026-03-26", "end": "2026-03-26", "dies": 5, "nota": null, "tramit": "Decret"}, {"fase": "15.PUBLICACIÓ LLISTA DEF BOP i DOGC", "start": "2026-03-30", "end": "2026-03-30", "dies": 2, "nota": null, "tramit": "Llista"}, {"fase": "16.ANUNCI CONVOCATÒRIA PROVA LLENGÜES", "start": "2026-03-31", "end": "2026-03-31", "dies": 1, "nota": null, "tramit": "Convocatòria / Prova"}, {"fase": "17.PROVA LLENGÜES", "start": "2026-04-13", "end": "2026-04-13", "dies": 9, "nota": null, "tramit": "Convocatòria / Prova"}, {"fase": "18.PUBLICACIÓ RESULTATS CATALÀ", "start": "2026-04-14", "end": "2026-04-14", "dies": 1, "nota": null, "tramit": "Resultat / Nomenament"}, {"fase": "19. APROVACIÓ PROVES TRIBUNAL", "start": "2026-03-05", "end": "2026-03-05", "dies": 30, "nota": null, "tramit": "Tribunal"}, {"fase": "20.ANUNCI CONVOCATÒRIA PROVES OPOSICIÓ", "start": "2026-04-14", "end": "2026-04-14", "dies": null, "nota": null, "tramit": "Convocatòria / Prova"}, {"fase": "21.PROVES OPOSICIÓ", "start": "2026-04-17", "end": "2026-04-17", "dies": 3, "nota": null, "tramit": "Convocatòria / Prova"}, {"fase": "22.ANUNCI TRIBUNAL PREGUNTES  I PLANTILLA CORRECCIÓ", "start": "2026-04-20", "end": "2026-04-20", "dies": 1, "nota": null, "tramit": "Tribunal"}, {"fase": "23.CORRECCIÓ PROVA I REUNIÓ TRIBUNAL APROVACIÓ RESULTATS I PROPOSTA NOMENAMENT", "start": "2026-04-24", "end": "2026-04-24", "dies": 4, "nota": null, "tramit": "Tribunal"}, {"fase": "24.ANUNCI TRIBUNAL RESULTATS PROVA I PROPOSTA NOMENAMENT", "start": "2026-04-27", "end": "2026-04-27", "dies": 1, "nota": null, "tramit": "Resultat / Nomenament"}]}]}, {"id": 5, "any": "2026", "categoria": "Arquitecte", "municipi": "ST ISCLE DE VALLALTA", "subfases": [{"nom": "Delegació", "inici": "2025-05-05", "fi": "2025-08-04", "fites": [{"fase": "DECRET INICI ACTUACIONS TEDIBA", "start": "2025-05-05", "end": "2025-05-05", "dies": null, "nota": null, "tramit": "Decret"}, {"fase": "SIGNATURA DECRET", "start": "2025-05-14", "end": "2025-05-14", "dies": 7, "nota": null, "tramit": "Decret"}, {"fase": "PUBLICAR BOP I DOGC", "start": "2025-05-23", "end": "2025-05-23", "dies": 7, "nota": null, "tramit": "Publicació"}, {"fase": "NOTIFICACIÓ AJUNTAMENTS", "start": "2025-05-23", "end": "2025-05-23", "dies": null, "nota": null, "tramit": "Notificació / Acord"}, {"fase": "ACORD PLE AJUNTAMENT", "start": "2025-05-31", "end": "2025-06-30", "dies": null, "nota": null, "tramit": "Notificació / Acord"}, {"fase": "ACORD PLE DIBA ACCEPTACIÓ DELEGACIONS", "start": "2025-07-24", "end": "2025-07-24", "dies": null, "nota": null, "tramit": "Notificació / Acord"}, {"fase": "NOTIFICACIÓ AJUNTAMENTS", "start": "2025-07-24", "end": "2025-07-24", "dies": null, "nota": null, "tramit": "Notificació / Acord"}, {"fase": "PUBLICAR BOP I DOGC", "start": "2025-08-04", "end": "2025-08-04", "dies": 7, "nota": null, "tramit": "Publicació"}]}, {"nom": "Procés selectiu", "inici": "2026-01-07", "fi": "2026-04-28", "fites": [{"fase": "1.BASES I CONVOCATÒRIA TEDIBA", "start": "2026-01-07", "end": "2026-01-07", "dies": null, "nota": null, "tramit": "Convocatòria / Prova"}, {"fase": "2.SIGNATURA DECRET", "start": "2026-01-14", "end": "2026-01-14", "dies": 5, "nota": null, "tramit": "Decret"}, {"fase": "3.PUBLICACIÓ BOPB", "start": "2026-01-20", "end": "2026-01-20", "dies": 4, "nota": null, "tramit": "Publicació"}, {"fase": "4.PUBLICACIÓ DOGC i BOE", "start": "2026-01-22", "end": "2026-01-22", "dies": 2, "nota": null, "tramit": "Publicació"}, {"fase": "5.INICI TERMINI PRESENTACIÓ INSTÀNCIES", "start": "2026-01-23", "end": "2026-01-23", "dies": 1, "nota": null, "tramit": "Termini"}, {"fase": "6.FI TERMINI PRESENTACIÓ INSTÀNCIES", "start": "2026-02-20", "end": "2026-02-20", "dies": 20, "nota": null, "tramit": "Termini"}, {"fase": "7.LLISTA PROVISIONAL A TEDIBA", "start": "2026-02-23", "end": "2026-02-23", "dies": 1, "nota": null, "tramit": "Llista"}, {"fase": "8.SIGNATURA DECRET", "start": "2026-02-27", "end": "2026-02-27", "dies": 4, "nota": null, "tramit": "Decret"}, {"fase": "9.CONSTITUCIÓ TRIBUNAL", "start": "2026-01-22", "end": "2026-01-22", "dies": 2, "nota": null, "tramit": "Tribunal"}, {"fase": "10.PUBLICACIÓ LLISTA PROV BOP i DOGC", "start": "2026-03-03", "end": "2026-03-03", "dies": 2, "nota": null, "tramit": "Llista"}, {"fase": "11. INICI TERMINI AL.LEGACIONS", "start": "2026-03-04", "end": "2026-03-04", "dies": 1, "nota": null, "tramit": "Termini"}, {"fase": "12.FI TERMINI AL.LEGACIONS", "start": "2026-03-18", "end": "2026-03-18", "dies": 10, "nota": null, "tramit": "Termini"}, {"fase": "13.LLISTA DEFINITIVA A TEDIBA", "start": "2026-03-19", "end": "2026-03-19", "dies": 1, "nota": null, "tramit": "Llista"}, {"fase": "14.SIGNATURA DECRET", "start": "2026-03-26", "end": "2026-03-26", "dies": 5, "nota": null, "tramit": "Decret"}, {"fase": "15.PUBLICACIÓ LLISTA DEF BOP i DOGC", "start": "2026-03-30", "end": "2026-03-30", "dies": 2, "nota": null, "tramit": "Llista"}, {"fase": "16.ANUNCI CONVOCATÒRIA PROVA LLENGÜES", "start": "2026-03-31", "end": "2026-03-31", "dies": 1, "nota": null, "tramit": "Convocatòria / Prova"}, {"fase": "17.PROVA LLENGÜES", "start": "2026-04-14", "end": "2026-04-14", "dies": 10, "nota": null, "tramit": "Convocatòria / Prova"}, {"fase": "18.PUBLICACIÓ RESULTATS CATALÀ", "start": "2026-04-15", "end": "2026-04-15", "dies": 1, "nota": null, "tramit": "Resultat / Nomenament"}, {"fase": "19. APROVACIÓ PROVES TRIBUNAL", "start": "2026-03-05", "end": "2026-03-05", "dies": 30, "nota": null, "tramit": "Tribunal"}, {"fase": "20.ANUNCI CONVOCATÒRIA PROVES OPOSICIÓ", "start": "2026-04-15", "end": "2026-04-15", "dies": 0, "nota": null, "tramit": "Convocatòria / Prova"}, {"fase": "21.PROVES OPOSICIÓ", "start": "2026-04-20", "end": "2026-04-20", "dies": 3, "nota": null, "tramit": "Convocatòria / Prova"}, {"fase": "22.ANUNCI TRIBUNAL PREGUNTES  I PLANTILLA CORRECCIÓ", "start": "2026-04-21", "end": "2026-04-21", "dies": 1, "nota": null, "tramit": "Tribunal"}, {"fase": "23.CORRECCIÓ PROVA I REUNIÓ TRIBUNAL APROVACIÓ RESULTATS I PROPOSTA NOMENAMENT", "start": "2026-04-27", "end": "2026-04-27", "dies": 4, "nota": null, "tramit": "Tribunal"}, {"fase": "24.ANUNCI TRIBUNAL RESULTATS PROVA I PROPOSTA NOMENAMENT", "start": "2026-04-28", "end": "2026-04-28", "dies": 1, "nota": null, "tramit": "Resultat / Nomenament"}]}]}, {"id": 6, "any": "2026", "categoria": "Enginyer/a", "municipi": "ST ISCLE DE VALLALTA", "subfases": [{"nom": "Delegació", "inici": "2025-05-05", "fi": "2025-08-04", "fites": [{"fase": "DECRET INICI ACTUACIONS TEDIBA", "start": "2025-05-05", "end": "2025-05-05", "dies": null, "nota": null, "tramit": "Decret"}, {"fase": "SIGNATURA DECRET", "start": "2025-05-14", "end": "2025-05-14", "dies": 7, "nota": null, "tramit": "Decret"}, {"fase": "PUBLICAR BOP I DOGC", "start": "2025-05-23", "end": "2025-05-23", "dies": 7, "nota": null, "tramit": "Publicació"}, {"fase": "NOTIFICACIÓ AJUNTAMENTS", "start": "2025-05-23", "end": "2025-05-23", "dies": null, "nota": null, "tramit": "Notificació / Acord"}, {"fase": "ACORD PLE AJUNTAMENT", "start": "2025-05-31", "end": "2025-06-30", "dies": null, "nota": null, "tramit": "Notificació / Acord"}, {"fase": "ACORD PLE DIBA ACCEPTACIÓ DELEGACIONS", "start": "2025-07-24", "end": "2025-07-24", "dies": null, "nota": null, "tramit": "Notificació / Acord"}, {"fase": "NOTIFICACIÓ AJUNTAMENTS", "start": "2025-07-24", "end": "2025-07-24", "dies": null, "nota": null, "tramit": "Notificació / Acord"}, {"fase": "PUBLICAR BOP I DOGC", "start": "2025-08-04", "end": "2025-08-04", "dies": 7, "nota": null, "tramit": "Publicació"}]}, {"nom": "Procés selectiu", "inici": "2026-01-07", "fi": "2026-04-29", "fites": [{"fase": "1.BASES I CONVOCATÒRIA TEDIBA", "start": "2026-01-07", "end": "2026-01-07", "dies": null, "nota": null, "tramit": "Convocatòria / Prova"}, {"fase": "2.SIGNATURA DECRET", "start": "2026-01-14", "end": "2026-01-14", "dies": 5, "nota": null, "tramit": "Decret"}, {"fase": "3.PUBLICACIÓ BOPB", "start": "2026-01-20", "end": "2026-01-20", "dies": 4, "nota": null, "tramit": "Publicació"}, {"fase": "4.PUBLICACIÓ DOGC i BOE", "start": "2026-01-22", "end": "2026-01-22", "dies": 2, "nota": null, "tramit": "Publicació"}, {"fase": "5.INICI TERMINI PRESENTACIÓ INSTÀNCIES", "start": "2026-01-23", "end": "2026-01-23", "dies": 1, "nota": null, "tramit": "Termini"}, {"fase": "6.FI TERMINI PRESENTACIÓ INSTÀNCIES", "start": "2026-02-20", "end": "2026-02-20", "dies": 20, "nota": null, "tramit": "Termini"}, {"fase": "7.LLISTA PROVISIONAL A TEDIBA", "start": "2026-02-23", "end": "2026-02-23", "dies": 1, "nota": null, "tramit": "Llista"}, {"fase": "8.SIGNATURA DECRET", "start": "2026-02-27", "end": "2026-02-27", "dies": 4, "nota": null, "tramit": "Decret"}, {"fase": "9.CONSTITUCIÓ TRIBUNAL", "start": "2026-01-22", "end": "2026-01-22", "dies": 2, "nota": null, "tramit": "Tribunal"}, {"fase": "10.PUBLICACIÓ LLISTA PROV BOP i DOGC", "start": "2026-03-03", "end": "2026-03-03", "dies": 2, "nota": null, "tramit": "Llista"}, {"fase": "11. INICI TERMINI AL.LEGACIONS", "start": "2026-03-04", "end": "2026-03-04", "dies": 1, "nota": null, "tramit": "Termini"}, {"fase": "12.FI TERMINI AL.LEGACIONS", "start": "2026-03-18", "end": "2026-03-18", "dies": 10, "nota": null, "tramit": "Termini"}, {"fase": "13.LLISTA DEFINITIVA A TEDIBA", "start": "2026-03-19", "end": "2026-03-19", "dies": 1, "nota": null, "tramit": "Llista"}, {"fase": "14.SIGNATURA DECRET", "start": "2026-03-26", "end": "2026-03-26", "dies": 5, "nota": null, "tramit": "Decret"}, {"fase": "15.PUBLICACIÓ LLISTA DEF BOP i DOGC", "start": "2026-03-30", "end": "2026-03-30", "dies": 2, "nota": null, "tramit": "Llista"}, {"fase": "16.ANUNCI CONVOCATÒRIA PROVA LLENGÜES", "start": "2026-03-31", "end": "2026-03-31", "dies": 1, "nota": null, "tramit": "Convocatòria / Prova"}, {"fase": "17.PROVA LLENGÜES", "start": "2026-04-15", "end": "2026-04-15", "dies": 11, "nota": "*3 i 6 abril festius setmana santa", "tramit": "Convocatòria / Prova"}, {"fase": "18.PUBLICACIÓ RESULTATS CATALÀ", "start": "2026-04-16", "end": "2026-04-16", "dies": 1, "nota": null, "tramit": "Resultat / Nomenament"}, {"fase": "19. APROVACIÓ PROVES TRIBUNAL", "start": "2026-03-05", "end": "2026-03-05", "dies": 30, "nota": null, "tramit": "Tribunal"}, {"fase": "20.ANUNCI CONVOCATÒRIA PROVES OPOSICIÓ", "start": "2026-04-16", "end": "2026-04-16", "dies": 0, "nota": null, "tramit": "Convocatòria / Prova"}, {"fase": "21.PROVES OPOSICIÓ", "start": "2026-04-21", "end": "2026-04-21", "dies": 3, "nota": null, "tramit": "Convocatòria / Prova"}, {"fase": "22.ANUNCI TRIBUNAL PREGUNTES  I PLANTILLA CORRECCIÓ", "start": "2026-04-22", "end": "2026-04-22", "dies": 1, "nota": null, "tramit": "Tribunal"}, {"fase": "23.CORRECCIÓ PROVA I REUNIÓ TRIBUNAL APROVACIÓ RESULTATS I PROPOSTA NOMENAMENT", "start": "2026-04-28", "end": "2026-04-28", "dies": 4, "nota": null, "tramit": "Tribunal"}, {"fase": "24.ANUNCI TRIBUNAL RESULTATS PROVA I PROPOSTA NOMENAMENT", "start": "2026-04-29", "end": "2026-04-29", "dies": 1, "nota": null, "tramit": "Resultat / Nomenament"}]}]}];
+
+const TRAMIT_STYLE = {
+  'Decret':                { color:'var(--t-decret)',       shape:'shape-circle' },
+  'Publicació':             { color:'var(--t-publicacio)',   shape:'shape-square' },
+  'Llista':                 { color:'var(--t-llista)',       shape:'shape-diamond' },
+  'Notificació / Acord':    { color:'var(--t-notificacio)',  shape:'shape-triangle-up' },
+  'Convocatòria / Prova':   { color:'var(--t-convocatoria)', shape:'shape-star' },
+  'Termini':                { color:'var(--t-termini)',      shape:'shape-hex' },
+  'Tribunal':                { color:'var(--t-tribunal)',     shape:'shape-plus' },
+  'Resultat / Nomenament':  { color:'var(--t-resultat)',     shape:'shape-triangle-down' },
+  'Altres':                 { color:'var(--t-altres)',       shape:'shape-circle' },
+};
+const TRAMIT_ORDER = Object.keys(TRAMIT_STYLE);
+function styleFor(t){ return TRAMIT_STYLE[t] || TRAMIT_STYLE['Altres']; }
+
+const ROW_H = 66;
+let PX_PER_DAY = 7.5; // default: comfortable weekly resolution
+const MONTH_NAMES_FULL = ['gener','febrer','març','abril','maig','juny','juliol','agost','setembre','octubre','novembre','desembre'];
+const MONTH_NAMES = ['gen.','febr.','març','abr.','maig','juny','jul.','ag.','set.','oct.','nov.','des.'];
+
+function parseISO(s){ if(!s) return null; const [y,m,d]=s.split('-').map(Number); return new Date(Date.UTC(y,m-1,d)); }
+function dayIndex(date, origin){ return Math.round((date-origin)/86400000); }
+// pixel position for a date, snapped to a whole device pixel so vertical rules render crisp, not blurred
+function xPos(date, origin){ return Math.round(dayIndex(date, origin) * PX_PER_DAY); }
+
+// ---- Festius oficials de Catalunya (Generalitat, calendari laboral 2025 i 2026) ----
+const HOLIDAY_NAMES = {
+  '2025-01-01':'Any Nou', '2025-01-06':'Reis', '2025-04-18':'Divendres Sant',
+  '2025-04-21':'Dilluns de Pasqua Florida', '2025-05-01':'Festa del Treball', '2025-06-24':'Sant Joan',
+  '2025-08-15':'Assumpció', '2025-09-11':'Diada Nacional de Catalunya', '2025-11-01':'Tots Sants',
+  '2025-12-06':'Dia de la Constitució', '2025-12-08':'La Immaculada', '2025-12-25':'Nadal', '2025-12-26':'Sant Esteve',
+  '2026-01-01':'Any Nou', '2026-01-06':'Reis', '2026-04-03':'Divendres Sant',
+  '2026-04-06':'Dilluns de Pasqua Florida', '2026-05-01':'Festa del Treball', '2026-06-24':'Sant Joan',
+  '2026-08-15':'Assumpció', '2026-09-11':'Diada Nacional de Catalunya', '2026-10-12':'Dia de la Hispanitat',
+  '2026-12-08':'La Immaculada', '2026-12-25':'Nadal', '2026-12-26':'Sant Esteve',
+};
+function isoOf(d){ return d.toISOString().slice(0,10); }
+// Tot el mes d'agost es tracta com a inhàbil (pràctica habitual en còmput de terminis administratius),
+// a més dels festius oficials puntuals de la resta de l'any.
+function holidayInfo(d){
+  const iso = isoOf(d);
+  if(HOLIDAY_NAMES[iso]) return { name: HOLIDAY_NAMES[iso], august:false };
+  if(d.getUTCMonth() === 7) return { name:'Agost (mes inhàbil)', august:true };
+  return null;
+}
+function fmtDate(iso){ const d=parseISO(iso); if(!d) return '—'; return d.getUTCDate()+' '+MONTH_NAMES[d.getUTCMonth()]+' '+d.getUTCFullYear(); }
+function mondayOnOrBefore(d){ const day=(d.getUTCDay()+6)%7; return new Date(Date.UTC(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate()-day)); }
+
+let allDates = [];
+DATA.forEach(p => p.subfases.forEach(sf => sf.fites.forEach(f => { if(f.start) allDates.push(parseISO(f.start)); if(f.end) allDates.push(parseISO(f.end)); })));
+const today = new Date();
+const todayUTC = new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()));
+allDates.push(todayUTC);
+
+let minDate = new Date(Math.min(...allDates));
+let maxDate = new Date(Math.max(...allDates));
+minDate = mondayOnOrBefore(new Date(Date.UTC(minDate.getUTCFullYear(), minDate.getUTCMonth(), 1)));
+maxDate = new Date(Date.UTC(maxDate.getUTCFullYear(), maxDate.getUTCMonth()+2, 1));
+
+const origin = minDate;
+const totalDays = dayIndex(maxDate, origin);
+
+const tramitChipsEl = document.getElementById('tramitChips');
+const rowsArea = document.getElementById('rowsArea');
+const sideCol = document.getElementById('sideCol');
+const timeHeader = document.getElementById('timeHeader');
+const tooltip = document.getElementById('tooltip');
+const searchBox = document.getElementById('searchBox');
+
+let activeTramits = new Set(TRAMIT_ORDER);
+
+function buildTramitChips(){
+  tramitChipsEl.innerHTML = '';
+  TRAMIT_ORDER.forEach(t => {
+    const s = styleFor(t);
+    const chip = document.createElement('span');
+    chip.className = 'chip';
+    chip.innerHTML = `<span class="shape ${s.shape}" style="background:${s.color}"></span>${t}`;
+    chip.addEventListener('click', () => {
+      if(activeTramits.has(t)) activeTramits.delete(t); else activeTramits.add(t);
+      chip.classList.toggle('off');
+      render();
+    });
+    tramitChipsEl.appendChild(chip);
+  });
+}
+
+function widthPx(){ return totalDays * PX_PER_DAY; }
+
+function buildHeader(){
+  timeHeader.innerHTML = '';
+  timeHeader.style.width = widthPx() + 'px';
+
+  // month bands
+  let mcursor = new Date(Date.UTC(origin.getUTCFullYear(), origin.getUTCMonth(), 1));
+  while(mcursor < maxDate){
+    const next = new Date(Date.UTC(mcursor.getUTCFullYear(), mcursor.getUTCMonth()+1, 1));
+    const x1 = Math.max(xPos(mcursor, origin), 0);
+    const x2 = xPos(next, origin);
+    const band = document.createElement('div');
+    band.className = 'month-band';
+    band.style.left = x1 + 'px';
+    band.style.width = (x2-x1) + 'px';
+    const bandWidth = x2 - x1;
+    const lbl = document.createElement('span');
+    lbl.className = 'month-band-label';
+    const full = MONTH_NAMES_FULL[mcursor.getUTCMonth()] + ' ' + mcursor.getUTCFullYear();
+    const short = MONTH_NAMES[mcursor.getUTCMonth()];
+    // pick a label that actually fits this band's width, so a narrow sliver (e.g. a partial
+    // month at the very start of the timeline) never overflows into the next month's band
+    if(bandWidth >= 95) lbl.textContent = full;
+    else if(bandWidth >= 34) lbl.textContent = short;
+    else lbl.textContent = '';
+    band.appendChild(lbl);
+    timeHeader.appendChild(band);
+    mcursor = next;
+  }
+
+  // week ticks
+  let wcursor = new Date(origin);
+  while(wcursor < maxDate){
+    const x = xPos(wcursor, origin);
+    const isMonthStart = wcursor.getUTCDate() <= 7;
+    const tick = document.createElement('div');
+    tick.className = 'week-tick' + (isMonthStart ? ' month-start' : '');
+    tick.style.left = x + 'px';
+    timeHeader.appendChild(tick);
+    if(PX_PER_DAY >= 4.5){
+      const wl = document.createElement('div');
+      wl.className = 'week-label';
+      wl.style.left = x + 'px';
+      wl.textContent = wcursor.getUTCDate();
+      timeHeader.appendChild(wl);
+    }
+    wcursor = new Date(Date.UTC(wcursor.getUTCFullYear(), wcursor.getUTCMonth(), wcursor.getUTCDate()+7));
+  }
+
+  // holiday shading in the header strip, so the ruler itself shows which days are non-working
+  computeHolidayRuns().forEach(run => {
+    const band = document.createElement('div');
+    band.className = 'header-holiday' + (run.august ? ' august' : '');
+    band.style.left = idxPx(run.startIdx) + 'px';
+    band.style.width = (idxPx(run.endIdx+1) - idxPx(run.startIdx)) + 'px';
+    band.title = run.name;
+    timeHeader.appendChild(band);
+  });
+}
+
+function idxPx(idx){ return Math.round(idx * PX_PER_DAY); }
+
+function computeHolidayRuns(){
+  const runs = [];
+  let cursor = new Date(origin);
+  let current = null;
+  while(cursor < maxDate){
+    const info = holidayInfo(cursor);
+    const idx = dayIndex(cursor, origin);
+    if(info){
+      const sameRun = current && current.august === info.august &&
+        (info.august || current.name === info.name) && idx === current.endIdx + 1;
+      if(sameRun){ current.endIdx = idx; }
+      else { if(current) runs.push(current); current = { startIdx:idx, endIdx:idx, august:info.august, name:info.name }; }
+    } else if(current){ runs.push(current); current = null; }
+    cursor = new Date(Date.UTC(cursor.getUTCFullYear(), cursor.getUTCMonth(), cursor.getUTCDate()+1));
+  }
+  if(current) runs.push(current);
+  return runs;
+}
+
+function buildRowBackgrounds(container){
+  // holiday shading first, so grid rules and today-line draw on top of it, not beneath it
+  computeHolidayRuns().forEach(run => {
+    const band = document.createElement('div');
+    band.className = 'holiday-band' + (run.august ? ' august' : '');
+    band.style.left = idxPx(run.startIdx) + 'px';
+    band.style.width = (idxPx(run.endIdx+1) - idxPx(run.startIdx)) + 'px';
+    band.title = run.name;
+    container.appendChild(band);
+  });
+
+  let mcursor = new Date(Date.UTC(origin.getUTCFullYear(), origin.getUTCMonth(), 1));
+  while(mcursor < maxDate){
+    const x = xPos(mcursor, origin);
+    const bg = document.createElement('div');
+    bg.className = 'row-bg-month';
+    bg.style.left = x + 'px';
+    container.appendChild(bg);
+    mcursor = new Date(Date.UTC(mcursor.getUTCFullYear(), mcursor.getUTCMonth()+1, 1));
+  }
+  let wcursor = new Date(origin);
+  while(wcursor < maxDate){
+    const x = xPos(wcursor, origin);
+    const bg = document.createElement('div');
+    bg.className = 'row-bg-week';
+    bg.style.left = x + 'px';
+    container.appendChild(bg);
+    wcursor = new Date(Date.UTC(wcursor.getUTCFullYear(), wcursor.getUTCMonth(), wcursor.getUTCDate()+7));
+  }
+  const tx = xPos(todayUTC, origin);
+  if(tx >= 0 && tx <= widthPx()){
+    const tl = document.createElement('div'); tl.className='today-line'; tl.style.left = tx+'px'; container.appendChild(tl);
+    const lab = document.createElement('div'); lab.className='today-label'; lab.style.left=(tx+4)+'px'; lab.textContent='avui'; container.appendChild(lab);
+  }
+}
+
+function showTooltip(evt, fase){
+  const s = styleFor(fase.tramit);
+  tooltip.innerHTML = `
+    <div class="t-tramit" style="color:${s.color}">${fase.tramit}</div>
+    <div class="t-fase">${fase.fase.replace(/^\d+\.\s*/,'')}</div>
+    <div class="t-date">${fase.start ? fmtDate(fase.start) : 'data pendent'}${fase.dies!=null? ' · '+fase.dies+' d.' : ''}</div>
+    ${fase.nota ? `<div class="t-note">${fase.nota}</div>` : ''}
+  `;
+  tooltip.classList.add('show');
+  moveTooltip(evt);
+}
+function moveTooltip(evt){
+  const pad=14; let x=evt.clientX+pad, y=evt.clientY+pad; const tw=280, th=90;
+  if(x+tw>window.innerWidth) x=evt.clientX-tw-pad;
+  if(y+th>window.innerHeight) y=evt.clientY-th-pad;
+  tooltip.style.left=x+'px'; tooltip.style.top=y+'px';
+}
+function hideTooltip(){ tooltip.classList.remove('show'); }
+
+function render(){
+  const q = searchBox.value.trim().toLowerCase();
+  const visibleProjects = DATA.filter(p => q==='' || p.municipi.toLowerCase().includes(q) || p.categoria.toLowerCase().includes(q));
+  document.getElementById('metaCount').textContent = visibleProjects.length;
+
+  sideCol.querySelectorAll('.side-row').forEach(n=>n.remove());
+  visibleProjects.forEach(p => {
+    const row = document.createElement('div');
+    row.className = 'side-row';
+    row.innerHTML = `
+      <div class="muni">${p.municipi}</div>
+      <div class="cat">${p.categoria}</div>
+      <div class="yr">${p.any}</div>
+    `;
+    sideCol.appendChild(row);
+  });
+
+  rowsArea.innerHTML = '';
+  rowsArea.style.width = widthPx() + 'px';
+  rowsArea.style.height = (visibleProjects.length * ROW_H) + 'px';
+  buildRowBackgrounds(rowsArea);
+
+  visibleProjects.forEach((p, idx) => {
+    const row = document.createElement('div');
+    row.style.position = 'absolute';
+    row.style.top = (idx*ROW_H) + 'px';
+    row.style.left = '0';
+    row.style.width = widthPx() + 'px';
+    row.style.height = ROW_H + 'px';
+    row.className = 'gantt-row';
+
+    p.subfases.forEach(sf => {
+      const fites = sf.fites.filter(f => f.start);
+      if(fites.length === 0) return;
+      const sorted = [...fites].sort((a,b)=> a.start.localeCompare(b.start));
+      const x1 = xPos(parseISO(sorted[0].start), origin);
+      const x2 = xPos(parseISO(sorted[sorted.length-1].start), origin);
+
+      const line = document.createElement('div');
+      line.className = 'connector';
+      line.style.left = x1 + 'px';
+      line.style.width = Math.max(x2-x1,1) + 'px';
+      row.appendChild(line);
+
+      const tag = document.createElement('div');
+      tag.className = 'phase-tag';
+      tag.style.left = x1 + 'px';
+      tag.textContent = sf.nom;
+      row.appendChild(tag);
+
+      sorted.forEach(f => {
+        if(!activeTramits.has(f.tramit)) return;
+        const s = styleFor(f.tramit);
+        const fx = xPos(parseISO(f.start), origin);
+        const m = document.createElement('div');
+        m.className = 'marker ' + s.shape;
+        m.style.left = fx + 'px';
+        m.style.background = s.color;
+        m.addEventListener('mouseenter', e=>showTooltip(e,f));
+        m.addEventListener('mousemove', moveTooltip);
+        m.addEventListener('mouseleave', hideTooltip);
+        row.appendChild(m);
+      });
+    });
+
+    rowsArea.appendChild(row);
+  });
+}
+
+document.getElementById('zoomIn').addEventListener('click', ()=>{ PX_PER_DAY = Math.min(PX_PER_DAY*1.35, 26); buildHeader(); render(); });
+document.getElementById('zoomOut').addEventListener('click', ()=>{ PX_PER_DAY = Math.max(PX_PER_DAY/1.35, 2.5); buildHeader(); render(); });
+document.getElementById('todayBtn').addEventListener('click', ()=>{
+  const scroller = document.getElementById('ganttScroll');
+  const tx = xPos(todayUTC, origin);
+  scroller.scrollLeft = Math.max(tx - scroller.clientWidth/2, 0);
+});
+searchBox.addEventListener('input', render);
+
+buildTramitChips();
+buildHeader();
+render();
+
+const metaRange = document.getElementById('metaRange');
+metaRange.textContent = MONTH_NAMES[minDate.getUTCMonth()]+' '+minDate.getUTCFullYear()+' – '+MONTH_NAMES[maxDate.getUTCMonth()]+' '+maxDate.getUTCFullYear();
+</script>
+</body>
+</html>
