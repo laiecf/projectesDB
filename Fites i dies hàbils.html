@@ -1,0 +1,118 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Fites i dies hàbils</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: una columna de lectura amb dos esquemes (comptatge i comparativa) */
+:root{
+  --bg:#f6f7f9; --panel:#ffffff; --fg:#1b2430; --soft:#5d6877; --line:#d9dee5;
+  --int:#2f6fb5; --int-bg:#dce9f7; --ext:#8b95a3; --ext-bg:#e9ecf0; --al:#b9852f; --al-bg:#f6e9cf;
+  --g1:#8b95a3; --g2:#c27a12; --g3:#c0392b; --theirs:#1b2430; --cat:#2f6fb5; --band:#f0f2f5;
+  --f-sans:'IBM Plex Sans',system-ui,sans-serif; --f-mono:'IBM Plex Mono',ui-monospace,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#12171e; --panel:#1a212b; --fg:#e6ebf1; --soft:#9aa6b5; --line:#2e3846;
+  --int:#6ea8e6; --int-bg:#1f3550; --ext:#7f8a99; --ext-bg:#262e3a; --al:#e0b25e; --al-bg:#4a3b1c;
+  --g1:#7f8a99; --g2:#e0a23c; --g3:#ec6a5b; --theirs:#e6ebf1; --cat:#6ea8e6; --band:#1e2630; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#12171e; --panel:#1a212b; --fg:#e6ebf1; --soft:#9aa6b5; --line:#2e3846;
+  --int:#6ea8e6; --int-bg:#1f3550; --ext:#7f8a99; --ext-bg:#262e3a; --al:#e0b25e; --al-bg:#4a3b1c;
+  --g1:#7f8a99; --g2:#e0a23c; --g3:#ec6a5b; --theirs:#e6ebf1; --cat:#6ea8e6; --band:#1e2630; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-sans);font-size:16px;line-height:1.55;
+  padding-block:32px 56px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+main{max-width:980px;margin:0 auto;display:flex;flex-direction:column;gap:28px}
+h1{font-size:30px;line-height:1.15;margin:0 0 6px;text-wrap:balance;font-weight:600}
+h2{font-size:21px;margin:0 0 8px;text-wrap:balance;font-weight:600}
+h3{font-size:15px;margin:0 0 4px;font-weight:600}
+p{margin:0 0 10px;max-width:70ch}
+.lead{color:var(--soft);font-size:17px;max-width:70ch}
+section{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:22px;min-width:0}
+.rules{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin:14px 0 18px}
+.rule{border-top:3px solid var(--int);padding-top:8px}
+.rule b{font-family:var(--f-mono);font-weight:500;color:var(--int)}
+.legend{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:13px;color:var(--soft);margin:10px 0 14px}
+.legend i{display:inline-block;width:14px;height:14px;border-radius:3px;vertical-align:-2px;margin-right:6px}
+.i-in{background:var(--int-bg);border:1px solid var(--int)} .i-ex{background:var(--ext-bg);border:1px dashed var(--ext)} .i-al{background:var(--al-bg);border:1px solid var(--al)}
+.diagram{overflow-x:auto;padding-bottom:6px}
+.strip{display:grid;grid-template-columns:110px minmax(780px,1fr);gap:10px;align-items:center;margin-bottom:10px}
+.slabel{font-weight:600;font-size:14px}
+.cells{display:grid;grid-template-columns:repeat(22,minmax(34px,1fr));gap:3px}
+.cell{border-radius:4px;min-height:70px;padding:4px 3px;display:flex;flex-direction:column;justify-content:space-between;font-size:10.5px;line-height:1.2;overflow:hidden}
+.cell b{font-family:var(--f-mono);font-weight:500;font-size:11px;color:var(--soft)}
+.cell span{overflow-wrap:anywhere}
+.cell.in{background:var(--int-bg);border:1px solid var(--int)}
+.cell.ex{background:var(--ext-bg);border:1px dashed var(--ext)}
+.cell.al{background:var(--al-bg);border:1px solid var(--al)}
+.cell.none{border:1px dashed var(--line);background:transparent;opacity:.55}
+.cap{font-size:14px;color:var(--soft)}
+.cap strong{color:var(--fg)}
+.chartbox{overflow-x:auto;border:1px solid var(--line);border-radius:8px;background:var(--panel)}
+svg{display:block}
+svg text{font-family:var(--f-sans);fill:var(--fg)}
+svg .ax,svg .axt,svg .hd{fill:var(--soft);font-size:11px}
+svg .ax{font-family:var(--f-mono)}
+svg .lb{font-size:12.5px}
+svg .grid{stroke:var(--line);stroke-width:1}
+svg .band{fill:var(--band)}
+svg .lk{stroke-width:3.5;stroke-linecap:round}
+svg .lk.g1{stroke:var(--g1);opacity:.55} svg .lk.g2{stroke:var(--g2)} svg .lk.g3{stroke:var(--g3)}
+svg .dt{fill:var(--theirs)} svg .dc{fill:var(--cat)}
+svg .df{font-family:var(--f-mono);font-size:12px;font-weight:500}
+svg .df.g1{fill:var(--soft)} svg .df.g2{fill:var(--g2)} svg .df.g3{fill:var(--g3)}
+.key{display:flex;flex-wrap:wrap;gap:8px 20px;font-size:13px;color:var(--soft);margin:12px 0}
+.key span{display:inline-flex;align-items:center;gap:6px}
+.dot{width:11px;height:11px;border-radius:50%;background:var(--theirs)} .sq{width:11px;height:11px;background:var(--cat)}
+.ln{width:22px;height:4px;border-radius:2px}
+.diffs{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px;margin-top:16px}
+.d{border:1px solid var(--line);border-radius:8px;padding:14px;min-width:0}
+.d .n{font-family:var(--f-mono);font-size:22px;font-weight:500;line-height:1}
+.d .big{color:var(--g3)} .d .mid{color:var(--g2)}
+.d p{font-size:14.5px;margin:6px 0 0}
+.ask{border-left:3px solid var(--g2);padding-left:14px;margin:0 0 12px}
+</style>
+
+<main>
+  <header>
+    <h1>Fites i dies hàbils</h1>
+    <p class="lead">Com compta els dies l'Excel de dies per fases i en què es diferencia l'Excel de programació OPO_IA. Tots els exemples són d'un procés de 30 sol·licituds.</p>
+  </header>
+
+  <section>
+    <h2>Com compto els dies</h2>
+    <p>L'Excel de dies per fases és una cadena: cada fita comença el dia hàbil següent a l'últim dia de l'anterior, i ocupa tants dies com indica la columna de dies.</p>
+    <div class="rules">
+      <div class="rule"><h3><b>1.</b> Una fita ocupa els seus dies</h3><p>Una signatura de 4 dies ocupa 4 dies hàbils seguits. Els tràmits externs (signatures i publicacions) compten igual que els interns.</p></div>
+      <div class="rule"><h3><b>2.</b> La següent comença l'endemà</h3><p>Quan acaba el dia 15, la fita següent és el dia 16. No hi ha dies buits entre fites.</p></div>
+      <div class="rule"><h3><b>3.</b> Els «(*)» són el mateix dia</h3><p>Les fites marcades amb (*) no tenen dies propis: es fan el mateix dia que l'anterior, per exemple l'anunci al tauler.</p></div>
+    </div>
+    <p>Aquest és el cas que m'has explicat: del final de les al·legacions fins a l'anunci de la prova de llengües. A dalt, el que fa l'Excel de dies per fases; a sota, el que fa l'Excel de programació OPO_IA.</p>
+    <div class="legend"><span><i class="i-al"></i>al·legacions (10 dies)</span><span><i class="i-in"></i>tràmit intern, un dia</span><span><i class="i-ex"></i>espera externa (signatura o publicació)</span></div>
+    <div class="diagram"><div class="strip"><div class="slabel">Dies per fases</div><div class="cells"><div class="cell al"><b>1</b><span>Al·legacions</span></div><div class="cell al"><b>2</b><span>Al·legacions</span></div><div class="cell al"><b>3</b><span>Al·legacions</span></div><div class="cell al"><b>4</b><span>Al·legacions</span></div><div class="cell al"><b>5</b><span>Al·legacions</span></div><div class="cell al"><b>6</b><span>Al·legacions</span></div><div class="cell al"><b>7</b><span>Al·legacions</span></div><div class="cell al"><b>8</b><span>Al·legacions</span></div><div class="cell al"><b>9</b><span>Al·legacions</span></div><div class="cell al"><b>10</b><span>Al·legacions</span></div><div class="cell in"><b>11</b><span>Decret</span></div><div class="cell ex"><b>12</b><span>Signatura</span></div><div class="cell ex"><b>13</b><span>Signatura</span></div><div class="cell ex"><b>14</b><span>Signatura</span></div><div class="cell ex"><b>15</b><span>Signatura</span></div><div class="cell in"><b>16</b><span>Anunci BOP</span></div><div class="cell ex"><b>17</b><span>Publicació</span></div><div class="cell ex"><b>18</b><span>Publicació</span></div><div class="cell ex"><b>19</b><span>Publicació</span></div><div class="cell ex"><b>20</b><span>Publicació</span></div><div class="cell in"><b>21</b><span>Anunci tauler</span></div><div class="cell in"><b>22</b><span>Anunci llengües</span></div></div></div><div class="strip"><div class="slabel">Excel OPO_IA</div><div class="cells"><div class="cell al"><b>1</b><span>Al·legacions</span></div><div class="cell al"><b>2</b><span>Al·legacions</span></div><div class="cell al"><b>3</b><span>Al·legacions</span></div><div class="cell al"><b>4</b><span>Al·legacions</span></div><div class="cell al"><b>5</b><span>Al·legacions</span></div><div class="cell al"><b>6</b><span>Al·legacions</span></div><div class="cell al"><b>7</b><span>Al·legacions</span></div><div class="cell al"><b>8</b><span>Al·legacions</span></div><div class="cell al"><b>9</b><span>Al·legacions</span></div><div class="cell al"><b>10</b><span>Al·legacions</span></div><div class="cell in"><b>11</b><span>Decret</span></div><div class="cell ex"><b>12</b><span>Signatura</span></div><div class="cell ex"><b>13</b><span>Signatura</span></div><div class="cell ex"><b>14</b><span>Signatura</span></div><div class="cell ex"><b>15</b><span>Signatura</span></div><div class="cell ex"><b>16</b><span>Publicació</span></div><div class="cell ex"><b>17</b><span>Publicació</span></div><div class="cell in"><b>18</b><span>Anunci llengües</span></div><div class="cell none"><b>19</b></div><div class="cell none"><b>20</b></div><div class="cell none"><b>21</b></div><div class="cell none"><b>22</b></div></div></div></div>
+    <p class="cap"><strong>Dies per fases:</strong> decret el dia 11, signatura els dies 12 a 15, anunci al BOP el 16, publicació del 17 al 20, anunci al tauler el 21 i anunci de la prova de llengües el 22. <strong>OPO_IA:</strong> decret més signatura són 5 dies (11 a 15), la publicació compta només 2 dies, no hi ha anunci al tauler i l'anunci de llengües és el dia 18. Surt <strong>4 dies hàbils abans</strong>.</p>
+  </section>
+
+  <section>
+    <h2>Diferències entre els dos Excel</h2>
+    <p>Cada fila és un tràmit del teu Excel OPO_IA. El punt és on el situa el teu Excel; el quadrat, on el situa l'Excel de dies per fases. Els dos compten des de la signatura del decret de bases (dia 0) i sense festius, perquè es vegi només la diferència de criteri.</p>
+    <div class="key"><span><i class="dot"></i>OPO_IA</span><span><i class="sq"></i>Dies per fases</span><span><i class="ln" style="background:var(--g1)"></i>fins a 2 dies</span><span><i class="ln" style="background:var(--g2)"></i>de 3 a 9 dies</span><span><i class="ln" style="background:var(--g3)"></i>10 dies o més</span></div>
+    <div class="chartbox"><svg viewBox="0 0 940 724" width="940" height="724" role="img" aria-label="Comparativa de cada tràmit entre l'Excel OPO_IA i l'Excel de dies per fases"><line class="grid" x1="340.0" x2="340.0" y1="32" y2="690"/><text class="ax" x="340.0" y="708" text-anchor="middle">0</text><line class="grid" x1="405.0" x2="405.0" y1="32" y2="690"/><text class="ax" x="405.0" y="708" text-anchor="middle">10</text><line class="grid" x1="470.0" x2="470.0" y1="32" y2="690"/><text class="ax" x="470.0" y="708" text-anchor="middle">20</text><line class="grid" x1="535.0" x2="535.0" y1="32" y2="690"/><text class="ax" x="535.0" y="708" text-anchor="middle">30</text><line class="grid" x1="600.0" x2="600.0" y1="32" y2="690"/><text class="ax" x="600.0" y="708" text-anchor="middle">40</text><line class="grid" x1="665.0" x2="665.0" y1="32" y2="690"/><text class="ax" x="665.0" y="708" text-anchor="middle">50</text><line class="grid" x1="730.0" x2="730.0" y1="32" y2="690"/><text class="ax" x="730.0" y="708" text-anchor="middle">60</text><line class="grid" x1="795.0" x2="795.0" y1="32" y2="690"/><text class="ax" x="795.0" y="708" text-anchor="middle">70</text><line class="grid" x1="860.0" x2="860.0" y1="32" y2="690"/><text class="ax" x="860.0" y="708" text-anchor="middle">80</text><text class="axt" x="600.0" y="722" text-anchor="middle">dies hàbils des de la signatura del decret de bases</text><text class="hd" x="920" y="22" text-anchor="end">dif.</text><rect class="band" x="0" y="40.0" width="940" height="28"/><text class="lb" x="330" y="58.0" text-anchor="end">Signatura del decret de bases (fita 5)</text><line class="lk g1" x1="340.0" x2="340.0" y1="54.0" y2="54.0"/><circle class="dt" cx="340.0" cy="54.0" r="5.5"/><rect class="dc" x="335.0" y="49.0" width="10" height="10"/><text class="df g1" x="920" y="58.0" text-anchor="end">0</text><text class="lb" x="330" y="86.0" text-anchor="end">Publicació al BOPB</text><line class="lk g2" x1="366.0" x2="385.5" y1="82.0" y2="82.0"/><circle class="dt" cx="366.0" cy="82.0" r="5.5"/><rect class="dc" x="380.5" y="77.0" width="10" height="10"/><text class="df g2" x="920" y="86.0" text-anchor="end">+3</text><rect class="band" x="0" y="96.0" width="940" height="28"/><text class="lb" x="330" y="114.0" text-anchor="end">Publicació al DOGC i BOE</text><line class="lk g1" x1="379.0" x2="385.5" y1="110.0" y2="110.0"/><circle class="dt" cx="379.0" cy="110.0" r="5.5"/><rect class="dc" x="380.5" y="105.0" width="10" height="10"/><text class="df g1" x="920" y="114.0" text-anchor="end">+1</text><text class="lb" x="330" y="142.0" text-anchor="end">Inici de les sol·licituds</text><line class="lk g1" x1="385.5" x2="398.5" y1="138.0" y2="138.0"/><circle class="dt" cx="385.5" cy="138.0" r="5.5"/><rect class="dc" x="393.5" y="133.0" width="10" height="10"/><text class="df g1" x="920" y="142.0" text-anchor="end">+2</text><rect class="band" x="0" y="152.0" width="940" height="28"/><text class="lb" x="330" y="170.0" text-anchor="end">Fi de les sol·licituds</text><line class="lk g1" x1="515.5" x2="522.0" y1="166.0" y2="166.0"/><circle class="dt" cx="515.5" cy="166.0" r="5.5"/><rect class="dc" x="517.0" y="161.0" width="10" height="10"/><text class="df g1" x="920" y="170.0" text-anchor="end">+1</text><text class="lb" x="330" y="198.0" text-anchor="end">Llista provisional (decret)</text><line class="lk g1" x1="522.0" x2="528.5" y1="194.0" y2="194.0"/><circle class="dt" cx="522.0" cy="194.0" r="5.5"/><rect class="dc" x="523.5" y="189.0" width="10" height="10"/><text class="df g1" x="920" y="198.0" text-anchor="end">+1</text><rect class="band" x="0" y="208.0" width="940" height="28"/><text class="lb" x="330" y="226.0" text-anchor="end">Signatura decret llista provisional</text><line class="lk g1" x1="548.0" x2="554.5" y1="222.0" y2="222.0"/><circle class="dt" cx="548.0" cy="222.0" r="5.5"/><rect class="dc" x="549.5" y="217.0" width="10" height="10"/><text class="df g1" x="920" y="226.0" text-anchor="end">+1</text><text class="lb" x="330" y="254.0" text-anchor="end">Constitució del tribunal</text><line class="lk g3" x1="379.0" x2="600.0" y1="250.0" y2="250.0"/><circle class="dt" cx="379.0" cy="250.0" r="5.5"/><rect class="dc" x="595.0" y="245.0" width="10" height="10"/><text class="df g3" x="920" y="254.0" text-anchor="end">+34</text><rect class="band" x="0" y="264.0" width="940" height="28"/><text class="lb" x="330" y="282.0" text-anchor="end">Publicació llista provisional</text><line class="lk g2" x1="561.0" x2="580.5" y1="278.0" y2="278.0"/><circle class="dt" cx="561.0" cy="278.0" r="5.5"/><rect class="dc" x="575.5" y="273.0" width="10" height="10"/><text class="df g2" x="920" y="282.0" text-anchor="end">+3</text><text class="lb" x="330" y="310.0" text-anchor="end">Inici de les al·legacions</text><line class="lk g2" x1="567.5" x2="600.0" y1="306.0" y2="306.0"/><circle class="dt" cx="567.5" cy="306.0" r="5.5"/><rect class="dc" x="595.0" y="301.0" width="10" height="10"/><text class="df g2" x="920" y="310.0" text-anchor="end">+5</text><rect class="band" x="0" y="320.0" width="940" height="28"/><text class="lb" x="330" y="338.0" text-anchor="end">Fi de les al·legacions</text><line class="lk g2" x1="632.5" x2="658.5" y1="334.0" y2="334.0"/><circle class="dt" cx="632.5" cy="334.0" r="5.5"/><rect class="dc" x="653.5" y="329.0" width="10" height="10"/><text class="df g2" x="920" y="338.0" text-anchor="end">+4</text><text class="lb" x="330" y="366.0" text-anchor="end">Llista definitiva (decret)</text><line class="lk g2" x1="639.0" x2="665.0" y1="362.0" y2="362.0"/><circle class="dt" cx="639.0" cy="362.0" r="5.5"/><rect class="dc" x="660.0" y="357.0" width="10" height="10"/><text class="df g2" x="920" y="366.0" text-anchor="end">+4</text><rect class="band" x="0" y="376.0" width="940" height="28"/><text class="lb" x="330" y="394.0" text-anchor="end">Signatura decret llista definitiva</text><line class="lk g2" x1="671.5" x2="691.0" y1="390.0" y2="390.0"/><circle class="dt" cx="671.5" cy="390.0" r="5.5"/><rect class="dc" x="686.0" y="385.0" width="10" height="10"/><text class="df g2" x="920" y="394.0" text-anchor="end">+3</text><text class="lb" x="330" y="422.0" text-anchor="end">Publicació llista definitiva</text><line class="lk g2" x1="684.5" x2="723.5" y1="418.0" y2="418.0"/><circle class="dt" cx="684.5" cy="418.0" r="5.5"/><rect class="dc" x="718.5" y="413.0" width="10" height="10"/><text class="df g2" x="920" y="422.0" text-anchor="end">+6</text><rect class="band" x="0" y="432.0" width="940" height="28"/><text class="lb" x="330" y="450.0" text-anchor="end">Anunci convocatòria prova llengües</text><line class="lk g2" x1="691.0" x2="736.5" y1="446.0" y2="446.0"/><circle class="dt" cx="691.0" cy="446.0" r="5.5"/><rect class="dc" x="731.5" y="441.0" width="10" height="10"/><text class="df g2" x="920" y="450.0" text-anchor="end">+7</text><text class="lb" x="330" y="478.0" text-anchor="end">Prova de llengües</text><line class="lk g2" x1="710.5" x2="743.0" y1="474.0" y2="474.0"/><circle class="dt" cx="710.5" cy="474.0" r="5.5"/><rect class="dc" x="738.0" y="469.0" width="10" height="10"/><text class="df g2" x="920" y="478.0" text-anchor="end">+5</text><rect class="band" x="0" y="488.0" width="940" height="28"/><text class="lb" x="330" y="506.0" text-anchor="end">Publicació resultats de català</text><line class="lk g2" x1="717.0" x2="749.5" y1="502.0" y2="502.0"/><circle class="dt" cx="717.0" cy="502.0" r="5.5"/><rect class="dc" x="744.5" y="497.0" width="10" height="10"/><text class="df g2" x="920" y="506.0" text-anchor="end">+5</text><text class="lb" x="330" y="534.0" text-anchor="end">Aprovació de les proves pel tribunal</text><line class="lk g3" x1="574.0" x2="775.5" y1="530.0" y2="530.0"/><circle class="dt" cx="574.0" cy="530.0" r="5.5"/><rect class="dc" x="770.5" y="525.0" width="10" height="10"/><text class="df g3" x="920" y="534.0" text-anchor="end">+31</text><rect class="band" x="0" y="544.0" width="940" height="28"/><text class="lb" x="330" y="562.0" text-anchor="end">Anunci convocatòria proves oposició</text><line class="lk g3" x1="717.0" x2="782.0" y1="558.0" y2="558.0"/><circle class="dt" cx="717.0" cy="558.0" r="5.5"/><rect class="dc" x="777.0" y="553.0" width="10" height="10"/><text class="df g3" x="920" y="562.0" text-anchor="end">+10</text><text class="lb" x="330" y="590.0" text-anchor="end">Proves d'oposició</text><line class="lk g2" x1="736.5" x2="795.0" y1="586.0" y2="586.0"/><circle class="dt" cx="736.5" cy="586.0" r="5.5"/><rect class="dc" x="790.0" y="581.0" width="10" height="10"/><text class="df g2" x="920" y="590.0" text-anchor="end">+9</text><rect class="band" x="0" y="600.0" width="940" height="28"/><text class="lb" x="330" y="618.0" text-anchor="end">Anunci plantilla de correcció</text><line class="lk g2" x1="743.0" x2="801.5" y1="614.0" y2="614.0"/><circle class="dt" cx="743.0" cy="614.0" r="5.5"/><rect class="dc" x="796.5" y="609.0" width="10" height="10"/><text class="df g2" x="920" y="618.0" text-anchor="end">+9</text><text class="lb" x="330" y="646.0" text-anchor="end">Correcció i reunió del tribunal</text><line class="lk g2" x1="769.0" x2="821.0" y1="642.0" y2="642.0"/><circle class="dt" cx="769.0" cy="642.0" r="5.5"/><rect class="dc" x="816.0" y="637.0" width="10" height="10"/><text class="df g2" x="920" y="646.0" text-anchor="end">+8</text><rect class="band" x="0" y="656.0" width="940" height="28"/><text class="lb" x="330" y="674.0" text-anchor="end">Anunci de resultats i proposta</text><line class="lk g2" x1="775.5" x2="834.0" y1="670.0" y2="670.0"/><circle class="dt" cx="775.5" cy="670.0" r="5.5"/><rect class="dc" x="829.0" y="665.0" width="10" height="10"/><text class="df g2" x="920" y="674.0" text-anchor="end">+9</text></svg></div>
+    <p class="cap" style="margin-top:10px">La xifra de la dreta és quants dies hàbils més tard cau el tràmit a dies per fases. Al final, el procés de dies per fases acaba el dia 76 i el d'OPO_IA el dia 67: <strong>9 dies hàbils més curt</strong>.</p>
+
+    <div class="diffs">
+      <div class="d"><div class="n big">34 i 31</div><h3>Tribunal en paral·lel</h3><p>Al teu Excel el tribunal es constitueix 2 dies després de publicar al BOPB (dia 6), i l'aprovació de proves surt 30 dies després. A dies per fases va dins les al·legacions (dia 40) i després dels resultats de català (dia 67).</p></div>
+      <div class="d"><div class="n mid">2 a 3 dies</div><h3>Publicacions més curtes</h3><p>La publicació de la llista provisional compta 2 dies, i la de la definitiva també 2. A dies per fases són 4 i 5 (la definitiva té anunci al BOP més publicació), i després hi ha l'anunci al tauler.</p></div>
+      <div class="d"><div class="n mid">5 dies</div><h3>Anunci de les proves d'oposició</h3><p>El teu Excel el fa el mateix dia que els resultats de català. A dies per fases hi ha 5 dies entremig: les sessions del tribunal que elaboren les proves, la maquetació i l'anunci.</p></div>
+      <div class="d"><div class="n mid">2 dies</div><h3>Inici de les sol·licituds</h3><p>Comença el dia 7 al teu Excel i el 9 a dies per fases. A dies per fases, a més de la publicació (6 dies), hi ha 1 dia d'anunci abans i 1 dia d'anunci al tauler després.</p></div>
+      <div class="d"><div class="n">Festius</div><h3>No es compten al teu Excel</h3><p>La fórmula WORKDAY no salta Divendres Sant (26/3), Dilluns de Pasqua (29/3) ni el 17/5 del 2027, tot i que els anotes a la columna D. Si els compta, les teves dates s'endarrereixen entre 2 i 5 dies.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Preguntes per parlar amb l'equip</h2>
+    <div class="ask"><h3>Quin criteri de dies s'ha de seguir?</h3><p>L'Excel de programació OPO_IA és més curt que el de dies per fases. Cal saber si els dies de l'Excel de programació són els reals o si s'ha de seguir el de dies per fases.</p></div>
+    <div class="ask"><h3>El tribunal pot treballar abans de la llista definitiva?</h3><p>Els tràmits del tribunal (constitució i aprovació de proves) són en paral·lel al teu Excel i en sèrie a dies per fases. Si es poden fer en paral·lel, la planificació d'OPO se simula diferent i es poden encabir més processos.</p></div>
+  </section>
+</main>
+
+</body></html>
