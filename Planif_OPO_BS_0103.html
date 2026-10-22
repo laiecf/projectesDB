@@ -253,7 +253,7 @@ function setup(){
 
 function procInfo(p, k){
   const start = p.start, end = p.end;
-  return {id:'p'+(k+1), muni:'m'+(p.m+1), g:p.g, t:p.t, start, end, p};
+  return {id:'p'+(k+1), muni:'', g:p.g, t:p.t, start, end, p};
 }
 function monthRange(key){ const [y,m]=key.split('-').map(Number); const a=`${key}-01`; const last=new Date(Date.UTC(y,m,0)).getUTCDate(); return [a,`${key}-${String(last).padStart(2,'0')}`]; }
 
@@ -311,7 +311,7 @@ function render(scrollToMonth){
     msList.forEach(ms=>{
       const s=(ms.sd||WD[r.p.i+ms.so]), e=(ms.ed||WD[r.p.i+ms.eo]);
       const x0=X(s), x1=X(e)+Math.round(PX);
-      const tip = () => (`<div class="a">${ms.ext?'Extern':TEAMS[ms.team]} · ${ms.tr}</div><div class="b">${ms.n}. ${ms.nom}</div><div class="c">${r.id.toUpperCase()} (${r.muni}) · ${fmt(s)}${s!==e?' → '+fmt(e):''}</div>${ms.h?`<div class="c">${ms.h} h${ms.ext?' (de la feina interna següent)':''}</div>`:''}`);
+      const tip = () => (`<div class="a">${ms.ext?'Extern':TEAMS[ms.team]} · ${ms.tr}</div><div class="b">${ms.n}. ${ms.nom}</div><div class="c">${r.id.toUpperCase()}${r.muni?' ('+r.muni+')':''} · ${fmt(s)}${s!==e?' → '+fmt(e):''}</div>${ms.h?`<div class="c">${ms.h} h${ms.ext?' (de la feina interna següent)':''}</div>`:''}`);
       if(ms.ext){
         if(off.tm.has('X') || ms.z) return;
         inner += `<div class="xline" style="left:${x0}px;width:${Math.max(3,x1-x0)}px;top:24px" data-ti="${TIPS.push(tip)-1}"></div>`;
@@ -370,7 +370,7 @@ function render(scrollToMonth){
   old.insertAdjacentHTML('beforeend', rows);
   $('sideBody').innerHTML = side;
   if(scrollToMonth && st.month!=='all'){ const [a]=monthRange(st.month); $('scroll').scrollLeft = Math.max(0,X(a)-40); }
-  $('note').innerHTML = `Resultat: 72 processos OPO (28 acaben el 2027, 44 el 2028) més les dues borses. El tribunal 3 porta 4 processos OPO i Borsa 1 i no treballa a l'agost. La constitució del tribunal (fites 20 a 22) es fa el més a prop possible de l'inici de sol·licituds, i l'aprovació de proves (37 i 38) entre la constitució i l'anunci de la fita 39. Entre la convocatòria i l'examen hi ha almenys 2 dies hàbils en blanc. Els exàmens de borsa cauen en dimecres o dijous i l'examen de la borsa 2 és el 22/9/2027. Allargaments (dies afegits): ('E13', 10): 4 processos; ('E13', 5): 4 processos; borses: Borsa 2 9. Capacitat: 30 h a la setmana per gestora (25 h la setmana d'un examen de borsa), 30 h per tribunal ampliable fins a 36 h; l'agost, 30 h de gestores i 16 h de tribunal en total; l'última setmana de juliol i la primera de setembre, 90 h de gestores en total; a les setmanes de Nadal (24/12–6/1), dues gestores (60 h en total) i cada tribunal al 50%. Les hores de gestora d'una borsa es reparteixen entre gestores. Les gestores estan equilibrades: cada una porta unes 413 h el 2027 i unes 370 h el 2028 (les dates i els tribunals no han canviat). Els municipis (m1 a m15) i els processos (p1…) són noms provisionals; els festius locals dels municipis reals (en afegir un procés) són una estimació a partir de l'any més recent publicat per la Generalitat; el calendari oficial del 2027 encara no s'ha publicat.`;
+  $('note').innerHTML = `Resultat: 72 processos OPO (28 acaben el 2027, 44 el 2028) més les dues borses. El tribunal 3 porta 4 processos OPO i Borsa 1 i no treballa a l'agost. La constitució del tribunal (fites 20 a 22) es fa el més a prop possible de l'inici de sol·licituds, i l'aprovació de proves (37 i 38) entre la constitució i l'anunci de la fita 39. Entre la convocatòria i l'examen hi ha almenys 2 dies hàbils en blanc. Els exàmens de borsa cauen en dimecres o dijous i l'examen de la borsa 2 és el 22/9/2027. Allargaments (dies afegits): ('E13', 10): 4 processos; ('E13', 5): 4 processos; borses: Borsa 2 9. Capacitat: 30 h a la setmana per gestora (25 h la setmana d'un examen de borsa), 30 h per tribunal ampliable fins a 36 h; l'agost, 30 h de gestores i 16 h de tribunal en total; l'última setmana de juliol i la primera de setembre, 90 h de gestores en total; a les setmanes de Nadal (24/12–6/1), dues gestores (60 h en total) i cada tribunal al 50%. Les hores de gestora d'una borsa es reparteixen entre gestores. Les gestores estan equilibrades: cada una porta unes 413 h el 2027 i unes 370 h el 2028 (les dates i els tribunals no han canviat). Els processos simulats (p1…) no tenen municipi; els festius locals dels municipis reals (en afegir un procés) són una estimació a partir de l'any més recent publicat per la Generalitat; el calendari oficial del 2027 encara no s'ha publicat.`;
 }
 
 const TIPS = [];
@@ -449,7 +449,7 @@ function addedInfo(a,n){
 function fillMuni(){
   const cur=$('selM').value||'all';
   const names=[...new Set(ADDED.map(a=>a.muni))].sort((a,b)=>a.localeCompare(b,'ca'));
-  $('selM').innerHTML='<option value="all">Tots</option><optgroup label="Simulació">'+Array.from({length:15},(_,i)=>`<option value="m${i+1}">m${i+1}</option>`).join('')+'</optgroup>'+(names.length?'<optgroup label="Afegits">'+names.map(n=>`<option value="${n.replace(/"/g,'&quot;')}">${n}</option>`).join('')+'</optgroup>':'');
+  $('selM').innerHTML='<option value="all">Tots</option>'+(names.length?'<optgroup label="Afegits">'+names.map(n=>`<option value="${n.replace(/"/g,'&quot;')}">${n}</option>`).join('')+'</optgroup>':'');
   $('selM').value=[...$('selM').options].some(o=>o.value===cur)?cur:'all'; st.m=$('selM').value;
 }
 function renderAddList(){
@@ -458,10 +458,10 @@ function renderAddList(){
 }
 function fillRep(){
   const cur=$('fRep').value, used=REPLSET(), own=new Set();
-  $('fRep').innerHTML='<option value="">Cap: afegir un procés nou</option>'+DATA.main.procs.map((p,k)=>[p,k]).sort((a,b)=>WD[a[0].i]<WD[b[0].i]?-1:1).map(([p,k])=>`<option value="${k}"${used.has(k)?' disabled':''}>P${k+1} · m${p.m+1} · ${fmt(WD[p.i])}</option>`).join('');
+  $('fRep').innerHTML='<option value="">Cap: afegir un procés nou</option>'+DATA.main.procs.map((p,k)=>[p,k]).sort((a,b)=>WD[a[0].i]<WD[b[0].i]?-1:1).map(([p,k])=>`<option value="${k}"${used.has(k)?' disabled':''}>P${k+1} · ${fmt(WD[p.i])}</option>`).join('');
   if(cur && !used.has(+cur)) $('fRep').value=cur;
 }
-const LSKEY='opo_afegits_v1';
+const LSKEY='opo_afegits_'+(document.title||'v')+'_v2';
 function persistLocal(){ if(dbCol) return; try{ localStorage.setItem(LSKEY, JSON.stringify(ADDED.map(({id,muni,placa,start,req,g,t,o22,o47,o37,rep,ts})=>({id,muni,placa,start,req,g,t,o22,o47,o37:o37==null?null:o37,rep:rep==null?null:rep,ts})))); }catch(e){} }
 function loadLocal(){ try{ const raw=localStorage.getItem(LSKEY); if(!raw) return false; const arr=JSON.parse(raw); const out=[]; for(const x of arr){ const i=WD.indexOf(x.start); if(i>=0 && MUNIS.includes(x.muni)) out.push({...x,rep:x.rep==null?null:x.rep,i}); } ADDED=out; return true; }catch(e){ return false; } }
 function saveNote(){ $('saveNote').textContent = dbCol ? 'Els canvis es desen a la pàgina i els veuen totes les persones amb accés.' : 'Els canvis es desen només en aquest navegador. Per compartir-los o guardar-los, utilitza «Exporta els canvis».'; }
@@ -516,7 +516,7 @@ async function onAdd(ev){
   const base=baseFor(null, rep!=null?[rep]:[]); let b=null;
   if(sp && i===sp.i && (gFix==null||gFix===sp.g) && (tFix==null||tFix===sp.t)){ const e0=evalAssign(i,req,sp.g,sp.t,sp.o22,sp.o47,base,sp.o37); if(e0.over<=1e-6) b={g:sp.g,t:sp.t,o22:sp.o22,o47:sp.o47,o37:sp.o37,e:e0}; }
   if(!b) b=bestAssign(i,req,base,gFix,tFix);
-  const pre = sp ? `Substitueix P${rep+1} (m${sp.m+1}, ${fmt(WD[sp.i])}). ` : '';
+  const pre = sp ? `Substitueix P${rep+1} (${fmt(WD[sp.i])}). ` : '';
   let msg, cls; const sameSp = !!(sp && i===sp.i);
   const viol = sameSp ? [] : ruleViol(i); const t3n = b.t===2 ? t3Count(null,rep)+1 : 0; const t3bad = t3n>5;
   if(b.e.over<=1e-6){ msg=pre+`Hi cap. Assignat a la Gestora ${b.g+1}${gFix!=null?' (triada)':''} i al Tribunal ${b.t+1}${tFix!=null?' (triat)':''}; la fita 22 cau la setmana del ${fmt(WKOF[i+b.o22])}.${note}`; cls='ok'; }
